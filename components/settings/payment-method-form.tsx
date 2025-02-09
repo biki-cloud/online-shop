@@ -13,14 +13,7 @@ import {
 import { Icons } from "@/components/ui/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
-
-interface PaymentMethod {
-  id: string;
-  brand: string;
-  last4: string;
-  expMonth: number;
-  expYear: number;
-}
+import type { PaymentMethod } from "@/lib/db/schema";
 
 export function PaymentMethodForm() {
   const [isLoading, setIsLoading] = useState(false);

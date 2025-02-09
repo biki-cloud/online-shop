@@ -6,6 +6,7 @@ import {
   timestamp,
   integer,
   decimal,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -136,6 +137,22 @@ export const orderItems = pgTable("order_items", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  stripePaymentMethodId: text("stripe_payment_method_id").notNull().unique(),
+  brand: varchar("brand", { length: 50 }).notNull(),
+  last4: varchar("last4", { length: 4 }).notNull(),
+  expMonth: integer("exp_month").notNull(),
+  expYear: integer("exp_year").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
@@ -145,6 +162,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  paymentMethods: many(paymentMethods),
 }));
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
@@ -218,6 +236,13 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
+export const paymentMethodsRelations = relations(paymentMethods, ({ one }) => ({
+  user: one(users, {
+    fields: [paymentMethods.userId],
+    references: [users.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -257,3 +282,5 @@ export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type NewOrderItem = typeof orderItems.$inferInsert;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type NewPaymentMethod = typeof paymentMethods.$inferInsert;
