@@ -4,6 +4,7 @@ import { Manrope } from "next/font/google";
 import { UserProvider } from "@/lib/auth";
 import { getUser } from "@/lib/db/queries";
 import { Nav } from "@/components/layout/nav";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Next.js SaaS Starter",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <UserProvider userPromise={userPromise}>
           <Nav />
           {children}
+          <Toaster />
         </UserProvider>
       </body>
     </html>
