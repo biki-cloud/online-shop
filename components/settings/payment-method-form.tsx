@@ -14,20 +14,50 @@ import { Icons } from "@/components/ui/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 
+interface PaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+}
+
 export function PaymentMethodForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
+  const setup_intent = searchParams.get("setup_intent");
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await fetch("/api/stripe/payment-methods");
+      if (!response.ok) {
+        throw new Error("Failed to fetch payment methods");
+      }
+      const data = await response.json();
+      setPaymentMethods(data.paymentMethods);
+    } catch (error) {
+      console.error("Error fetching payment methods:", error);
+      toast({
+        title: "エラーが発生しました",
+        description: "カード情報の取得に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (success !== null) {
-      if (success === "true") {
+      if (success === "true" && setup_intent) {
         toast({
           title: "カード情報の登録が完了しました",
           description: "次回のお買い物からご利用いただけます。",
         });
+        // カード情報を再取得
+        fetchPaymentMethods();
       } else {
         toast({
           title: "カード情報の登録に失敗しました",
@@ -36,9 +66,13 @@ export function PaymentMethodForm() {
         });
       }
       // パラメータをクリア
-      router.replace("/settings/payment");
+      router.replace("/settings/payment", { scroll: false });
     }
-  }, [success, toast, router]);
+  }, [success, setup_intent, toast, router]);
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
 
   const onSubmit = async () => {
     try {
@@ -73,22 +107,47 @@ export function PaymentMethodForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
-        <div className="flex items-center space-x-4 rounded-md border p-4">
-          <Icons.creditCard className="h-6 w-6" />
-          <div className="flex-1 space-y-1">
-            <p className="text-sm font-medium leading-none">
-              Stripeセキュア決済
-            </p>
-            <p className="text-sm text-muted-foreground">
-              カード情報は安全に保管され、次回のお買い物から利用できます。
-            </p>
+        {paymentMethods.length > 0 ? (
+          <div className="space-y-4">
+            {paymentMethods.map((method) => (
+              <div
+                key={method.id}
+                className="flex items-center justify-between rounded-md border p-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <Icons.creditCard className="h-6 w-6" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {method.brand.toUpperCase()} •••• {method.last4}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      有効期限: {method.expMonth}/{method.expYear}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center space-x-4 rounded-md border p-4">
+            <Icons.creditCard className="h-6 w-6" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">
+                Stripeセキュア決済
+              </p>
+              <p className="text-sm text-muted-foreground">
+                カード情報は安全に保管され、次回のお買い物から利用できます。
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter>
         <Button onClick={onSubmit} disabled={isLoading} className="w-full">
           {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-          カードを登録する
+          {paymentMethods.length > 0
+            ? "新しいカードを追加"
+            : "カードを登録する"}
         </Button>
       </CardFooter>
     </Card>

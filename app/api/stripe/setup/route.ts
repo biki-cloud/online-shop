@@ -27,15 +27,28 @@ export async function POST() {
         },
       });
       customerId = customer.id;
-      await updateUserStripeCustomerId(user.id, customerId);
     }
+
+    // セットアップインテントを作成
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ["card"],
+      metadata: {
+        userId: user.id.toString(),
+      },
+    });
 
     // セットアップ用のセッションを作成
     const setupSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       mode: "setup",
-      success_url: `${process.env.BASE_URL}/settings/payment?success=true`,
+      setup_intent_data: {
+        metadata: {
+          userId: user.id.toString(),
+        },
+      },
+      success_url: `${process.env.BASE_URL}/settings/payment?success=true&setup_intent=${setupIntent.id}`,
       cancel_url: `${process.env.BASE_URL}/settings/payment?success=false`,
     });
 
