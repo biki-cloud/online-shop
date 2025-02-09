@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,23 +21,24 @@ export function PaymentMethodForm() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
 
-  // 成功・失敗のメッセージを表示
-  if (success !== null) {
-    if (success === "true") {
-      toast({
-        title: "カード情報の登録が完了しました",
-        description: "次回のお買い物からご利用いただけます。",
-      });
-    } else {
-      toast({
-        title: "カード情報の登録に失敗しました",
-        description: "もう一度お試しください。",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    if (success !== null) {
+      if (success === "true") {
+        toast({
+          title: "カード情報の登録が完了しました",
+          description: "次回のお買い物からご利用いただけます。",
+        });
+      } else {
+        toast({
+          title: "カード情報の登録に失敗しました",
+          description: "もう一度お試しください。",
+          variant: "destructive",
+        });
+      }
+      // パラメータをクリア
+      router.replace("/settings/payment");
     }
-    // パラメータをクリア
-    router.replace("/settings/payment");
-  }
+  }, [success, toast, router]);
 
   const onSubmit = async () => {
     try {
