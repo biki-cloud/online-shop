@@ -11,6 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice, calculateOrderAmount } from "@/lib/utils";
+import { getUser } from "@/lib/db/queries";
+import { getPaymentMethods } from "@/lib/payments/actions";
+import { PaymentMethodForm } from "@/components/settings/payment-method-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SavedPaymentMethodList } from "@/components/checkout/saved-payment-method-list";
 
 export default async function CheckoutPage() {
   const session = await getSession();
@@ -27,6 +32,11 @@ export default async function CheckoutPage() {
   if (cartItems.length === 0) {
     redirect("/cart");
   }
+
+  const user = await getUser(session.user.id);
+  const paymentMethods = user?.stripeCustomerId
+    ? await getPaymentMethods(user.stripeCustomerId)
+    : [];
 
   const subtotal = cartItems.reduce((acc, item) => {
     if (!item.product) return acc;
@@ -97,14 +107,30 @@ export default async function CheckoutPage() {
               <div>{formatPrice(total, "JPY")}</div>
             </div>
           </div>
+          <Tabs defaultValue={paymentMethods.length > 0 ? "saved" : "new"}>
+            <TabsList className="grid w-full grid-cols-2">
+              {paymentMethods.length > 0 && (
+                <TabsTrigger value="saved">登録済みのカード</TabsTrigger>
+              )}
+              <TabsTrigger value="new">新しいカード</TabsTrigger>
+            </TabsList>
+            {paymentMethods.length > 0 && (
+              <TabsContent value="saved">
+                <SavedPaymentMethodList
+                  paymentMethods={paymentMethods}
+                  amount={total}
+                />
+              </TabsContent>
+            )}
+            <TabsContent value="new">
+              <form action={handleCheckout}>
+                <Button type="submit" size="lg" className="w-full">
+                  新しいカードで支払う
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
-        <CardFooter className="justify-end">
-          <form action={handleCheckout}>
-            <Button type="submit" size="lg">
-              注文を確定する
-            </Button>
-          </form>
-        </CardFooter>
       </Card>
     </div>
   );
