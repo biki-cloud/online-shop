@@ -244,3 +244,16 @@ export async function getStripeProducts() {
         : product.default_price?.id,
   }));
 }
+
+export async function deletePaymentMethod(paymentMethodId: string) {
+  console.log("Stripe deletePaymentMethod 開始:", { paymentMethodId });
+
+  try {
+    const result = await stripe.paymentMethods.detach(paymentMethodId);
+    console.log("Stripe deletePaymentMethod 成功:", result);
+    return { success: true };
+  } catch (error) {
+    console.error("Stripe deletePaymentMethod エラー:", error);
+    throw error;
+  }
+}

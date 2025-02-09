@@ -23,17 +23,27 @@ export function PaymentMethodForm() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const setup_intent = searchParams.get("setup_intent");
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const fetchPaymentMethods = async () => {
     try {
+      console.log("カード情報取得開始");
       const response = await fetch("/api/stripe/payment-methods");
+
+      console.log("カード情報取得レスポンス:", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+
       if (!response.ok) {
-        throw new Error("Failed to fetch payment methods");
+        throw new Error("カード情報の取得に失敗しました");
       }
+
       const data = await response.json();
+      console.log("取得したカード情報:", data);
       setPaymentMethods(data.paymentMethods);
     } catch (error) {
-      console.error("Error fetching payment methods:", error);
+      console.error("カード情報取得エラー:", error);
       toast({
         title: "エラーが発生しました",
         description: "カード情報の取得に失敗しました。",
@@ -91,6 +101,70 @@ export function PaymentMethodForm() {
     }
   };
 
+  const handleDelete = async (paymentMethodId: string) => {
+    console.log("削除リクエスト受信 - PaymentMethod ID:", paymentMethodId);
+    if (!paymentMethodId) {
+      console.error("無効なペイメントメソッドID");
+      toast({
+        title: "エラーが発生しました",
+        description: "カードIDが無効です。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("削除開始 - PaymentMethod ID:", paymentMethodId);
+
+    try {
+      setIsDeleting(paymentMethodId);
+      console.log("削除リクエスト送信中...");
+
+      const response = await fetch(
+        `/api/stripe/payment-methods/${paymentMethodId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("APIレスポンス:", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+
+      const data = await response.json();
+      console.log("レスポンスデータ:", data);
+
+      if (!response.ok) {
+        console.error("APIエラー:", data.error);
+        throw new Error(data.error || "カードの削除に失敗しました");
+      }
+
+      if (data.success) {
+        console.log("削除成功 - カード情報を再取得します");
+        toast({
+          title: "カードを削除しました",
+          description: "カード情報が正常に削除されました。",
+        });
+        await fetchPaymentMethods();
+      }
+    } catch (error) {
+      console.error("削除処理エラー:", error);
+      toast({
+        title: "エラーが発生しました",
+        description:
+          error instanceof Error
+            ? error.message
+            : "カードの削除に失敗しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -118,6 +192,21 @@ export function PaymentMethodForm() {
                     </p>
                   </div>
                 </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() =>
+                    method.stripePaymentMethodId &&
+                    handleDelete(method.stripePaymentMethodId)
+                  }
+                  disabled={isDeleting === method.stripePaymentMethodId}
+                >
+                  {isDeleting === method.stripePaymentMethodId ? (
+                    <Icons.spinner className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "削除"
+                  )}
+                </Button>
               </div>
             ))}
           </div>
