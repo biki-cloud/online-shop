@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle";
-import { users, teamMembers } from "../../schema";
+import { users } from "../../schema";
 import { cookies } from "next/headers";
 import { verifyToken } from "../../../auth/session";
 import { mockUser } from "../../../mock/user";
@@ -36,18 +36,4 @@ export async function getUser() {
     .limit(1);
 
   return user.length === 0 ? null : user[0];
-}
-
-export async function getUserWithTeam(userId: number) {
-  const result = await db
-    .select({
-      user: users,
-      teamId: teamMembers.teamId,
-    })
-    .from(users)
-    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  return result[0];
 }

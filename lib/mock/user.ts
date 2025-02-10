@@ -6,7 +6,7 @@ export const mockUser: User = {
   name: "Test User",
   createdAt: new Date(),
   updatedAt: new Date(),
-  role: "member",
+  role: "user",
   passwordHash:
     "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   deletedAt: null,

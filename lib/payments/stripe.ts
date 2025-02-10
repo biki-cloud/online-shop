@@ -1,19 +1,12 @@
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
-import { Team } from "@/lib/db/schema";
-import {
-  getTeamByStripeCustomerId,
-  getUser,
-  updateTeamSubscription,
-} from "@/lib/db/queries";
-import { getCartItems } from "@/lib/db/queries/cart";
+import type { Cart, CartItem, Product } from "@/lib/db/schema";
+import { calculateOrderAmount } from "@/lib/utils";
 import {
   createOrder,
   createOrderItems,
   updateOrderStatus,
 } from "@/lib/db/queries/orders";
-import type { Cart, CartItem, Product } from "@/lib/db/schema";
-import { calculateOrderAmount } from "@/lib/utils";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia",
@@ -25,10 +18,10 @@ export async function createCheckoutSession({
   cartItems,
 }: {
   userId: number;
-  cart: Cart;
+  cart: Cart | null;
   cartItems: (CartItem & { product: Product | null })[];
 }) {
-  if (!cart || cartItems.length === 0) {
+  if (!cartItems.length) {
     redirect("/cart");
   }
 
@@ -98,7 +91,7 @@ export async function createCheckoutSession({
 export async function handlePaymentSuccess(session: Stripe.Checkout.Session) {
   const orderId = Number(session.metadata?.orderId);
   if (!orderId) {
-    throw new Error("No order ID found in session metadata.");
+    throw new Error("注文IDが見つかりません。");
   }
 
   await updateOrderStatus(orderId, "paid", session.payment_intent as string);
@@ -107,107 +100,10 @@ export async function handlePaymentSuccess(session: Stripe.Checkout.Session) {
 export async function handlePaymentFailure(session: Stripe.Checkout.Session) {
   const orderId = Number(session.metadata?.orderId);
   if (!orderId) {
-    throw new Error("No order ID found in session metadata.");
+    throw new Error("注文IDが見つかりません。");
   }
 
   await updateOrderStatus(orderId, "failed");
-}
-
-export async function createCustomerPortalSession(team: Team) {
-  if (!team.stripeCustomerId || !team.stripeProductId) {
-    redirect("/pricing");
-  }
-
-  let configuration: Stripe.BillingPortal.Configuration;
-  const configurations = await stripe.billingPortal.configurations.list();
-
-  if (configurations.data.length > 0) {
-    configuration = configurations.data[0];
-  } else {
-    const product = await stripe.products.retrieve(team.stripeProductId);
-    if (!product.active) {
-      throw new Error("Team's product is not active in Stripe");
-    }
-
-    const prices = await stripe.prices.list({
-      product: product.id,
-      active: true,
-    });
-    if (prices.data.length === 0) {
-      throw new Error("No active prices found for the team's product");
-    }
-
-    configuration = await stripe.billingPortal.configurations.create({
-      business_profile: {
-        headline: "Manage your subscription",
-      },
-      features: {
-        subscription_update: {
-          enabled: true,
-          default_allowed_updates: ["price", "quantity", "promotion_code"],
-          proration_behavior: "create_prorations",
-          products: [
-            {
-              product: product.id,
-              prices: prices.data.map((price) => price.id),
-            },
-          ],
-        },
-        subscription_cancel: {
-          enabled: true,
-          mode: "at_period_end",
-          cancellation_reason: {
-            enabled: true,
-            options: [
-              "too_expensive",
-              "missing_features",
-              "switched_service",
-              "unused",
-              "other",
-            ],
-          },
-        },
-      },
-    });
-  }
-
-  return stripe.billingPortal.sessions.create({
-    customer: team.stripeCustomerId,
-    return_url: `${process.env.BASE_URL}/`,
-    configuration: configuration.id,
-  });
-}
-
-export async function handleSubscriptionChange(
-  subscription: Stripe.Subscription
-) {
-  const customerId = subscription.customer as string;
-  const subscriptionId = subscription.id;
-  const status = subscription.status;
-
-  const team = await getTeamByStripeCustomerId(customerId);
-
-  if (!team) {
-    console.error("Team not found for Stripe customer:", customerId);
-    return;
-  }
-
-  if (status === "active" || status === "trialing") {
-    const plan = subscription.items.data[0]?.plan;
-    await updateTeamSubscription(team.id, {
-      stripeSubscriptionId: subscriptionId,
-      stripeProductId: plan?.product as string,
-      planName: (plan?.product as Stripe.Product).name,
-      subscriptionStatus: status,
-    });
-  } else if (status === "canceled" || status === "unpaid") {
-    await updateTeamSubscription(team.id, {
-      stripeSubscriptionId: null,
-      stripeProductId: null,
-      planName: null,
-      subscriptionStatus: status,
-    });
-  }
 }
 
 export async function getStripePrices() {

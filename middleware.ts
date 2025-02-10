@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { signToken, verifyToken } from "@/lib/auth/session";
 
-const protectedRoutes = ["/cart"];
+const protectedRoutes = ["/cart", "/checkout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,6 +10,11 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
+
+  // ルートパスへのアクセスを/homeにリダイレクト
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/home", request.url));
+  }
 
   // 保護されたルートでセッションがない場合
   if (isProtectedRoute && !sessionCookie) {
