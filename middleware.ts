@@ -11,6 +11,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  // ルートパスへのアクセスを/homeにリダイレクト
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/home", request.url));
+  }
+
   // 保護されたルートでセッションがない場合
   if (isProtectedRoute && !sessionCookie) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
@@ -18,7 +23,7 @@ export async function middleware(request: NextRequest) {
 
   // 認証ルートにセッションがある場合はリダイレクト
   if ((pathname === "/sign-in" || pathname === "/sign-up") && sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/home", request.url));
   }
 
   let res = NextResponse.next();
