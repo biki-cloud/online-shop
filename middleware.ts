@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { signToken, verifyToken } from "@/lib/auth/session";
 
-const protectedRoutes = ["/cart"];
+const protectedRoutes = ["/cart", "/checkout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
   // 認証ルートにセッションがある場合はリダイレクト
   if ((pathname === "/sign-in" || pathname === "/sign-up") && sessionCookie) {
-    return NextResponse.redirect(new URL("/home", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   let res = NextResponse.next();
