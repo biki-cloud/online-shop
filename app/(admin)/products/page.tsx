@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getProducts } from "@/lib/db/queries/product";
+import { DeleteProductButton } from "@/components/products/delete-product-button";
 
 export default async function AdminProductsPage() {
   const productList = await getProducts();
@@ -51,15 +52,7 @@ export default async function AdminProductsPage() {
                         編集
                       </Link>
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        // TODO: 削除機能の実装
-                      }}
-                    >
-                      削除
-                    </Button>
+                    <DeleteProductButton productId={product.id} />
                   </div>
                 </TableCell>
               </TableRow>
