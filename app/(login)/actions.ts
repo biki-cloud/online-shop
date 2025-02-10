@@ -26,9 +26,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
 
   if (USE_MOCK) {
-    console.log("Using mock authentication for:", email);
     const mockUser = await authenticateMockUser(email, password);
-    console.log("Mock authentication result:", mockUser ? "success" : "failed");
     if (!mockUser) {
       return {
         error: "メールアドレスまたはパスワードが正しくありません。",
