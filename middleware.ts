@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { signToken, verifyToken } from "@/lib/auth/session";
 
 const protectedRoutes = ["/cart", "/checkout"];
+const adminRoutes = ["/admin"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,10 +11,27 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
 
   // ルートパスへのアクセスを/homeにリダイレクト
   if (pathname === "/") {
     return NextResponse.redirect(new URL("/home", request.url));
+  }
+
+  // 管理者ルートのチェック
+  if (isAdminRoute) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
+
+    try {
+      const session = await verifyToken(sessionCookie.value);
+      if (session.user.role !== "admin") {
+        return NextResponse.redirect(new URL("/home", request.url));
+      }
+    } catch (error) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
   }
 
   // 保護されたルートでセッションがない場合
@@ -29,7 +47,7 @@ export async function middleware(request: NextRequest) {
   let res = NextResponse.next();
 
   // セッションの更新処理（保護されたルートの場合のみ）
-  if (sessionCookie && isProtectedRoute) {
+  if (sessionCookie && (isProtectedRoute || isAdminRoute)) {
     try {
       const parsed = await verifyToken(sessionCookie.value);
       const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);

@@ -1,39 +1,25 @@
-import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle";
 import { users } from "../../schema";
-import { cookies } from "next/headers";
-import { verifyToken } from "../../../auth/session";
-import { mockUser } from "../../../mock/user";
-import { USE_MOCK } from "../../../config";
+import { eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
+import { mockUsers, authenticateMockUser } from "../../../mock/user";
+
+const USE_MOCK = process.env.USE_MOCK === "true";
 
 export async function getUser() {
-  const sessionCookie = (await cookies()).get("session");
-  if (!sessionCookie || !sessionCookie.value) {
-    return null;
-  }
-
-  const sessionData = await verifyToken(sessionCookie.value);
-  if (
-    !sessionData ||
-    !sessionData.user ||
-    typeof sessionData.user.id !== "number"
-  ) {
-    return null;
-  }
-
-  if (new Date(sessionData.expires) < new Date()) {
-    return null;
-  }
+  const session = await getSession();
+  if (!session) return null;
 
   if (USE_MOCK) {
-    return mockUser;
+    return mockUsers[0];
   }
 
   const user = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
-    .limit(1);
+    .where(eq(users.id, session.user.id))
+    .limit(1)
+    .then((rows) => rows[0]);
 
-  return user.length === 0 ? null : user[0];
+  return user;
 }
