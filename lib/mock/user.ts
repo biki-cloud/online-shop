@@ -32,6 +32,7 @@ export async function authenticateMockUser(
   const user = mockUsers.find((u) => u.email === email);
   if (!user) return null;
 
+  // モックデータなのでパスワードの比較は行わない
   return user;
 }
 

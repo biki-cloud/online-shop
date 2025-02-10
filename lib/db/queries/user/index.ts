@@ -2,7 +2,7 @@ import { db } from "../../drizzle";
 import { users } from "../../schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
-import { mockUsers, authenticateMockUser } from "../../../mock/user";
+import { mockUsers } from "../../../mock/user";
 
 const USE_MOCK = process.env.USE_MOCK === "true";
 
@@ -11,7 +11,9 @@ export async function getUser() {
   if (!session) return null;
 
   if (USE_MOCK) {
-    return mockUsers[0];
+    const mockUser = mockUsers.find((user) => user.id === session.user.id);
+    if (!mockUser) return null;
+    return mockUser;
   }
 
   const user = await db
