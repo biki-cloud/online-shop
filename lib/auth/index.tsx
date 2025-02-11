@@ -18,6 +18,7 @@ const UserContext = createContext<UserContextType | null>(null);
 
 export function useUser(): UserContextType {
   let context = useContext(UserContext);
+  console.log("[useUser] Current user context:", context?.user?.id);
   if (context === null) {
     throw new Error("useUser must be used within a UserProvider");
   }
