@@ -17,8 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // if (USE_MOCK) {
-    if (false) {
+    if (USE_MOCK) {
       console.log("uploadFile local");
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);

@@ -26,14 +26,16 @@ export async function getProductById(id: number) {
 }
 
 export async function createProduct(
-  data: Pick<Product, "name" | "description" | "price" | "stock" | "currency">
+  data: Pick<
+    Product,
+    "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
+  >
 ) {
   console.log("createProduct");
   if (USE_MOCK) {
     const newProduct: Product = {
       id: mockProducts.length + 1,
       ...data,
-      imageUrl: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,

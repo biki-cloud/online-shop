@@ -10,6 +10,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0),
   stock: z.coerce.number().min(0),
   currency: z.string(),
+  imageUrl: z.string(),
 });
 
 export async function createProductAction(data: z.infer<typeof productSchema>) {
