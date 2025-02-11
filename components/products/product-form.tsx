@@ -15,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Image from "next/image";
 
 const productFormSchema = z.object({
   name: z.string().min(1, "商品名は必須です"),
@@ -22,12 +24,13 @@ const productFormSchema = z.object({
   price: z.coerce.number().min(0, "価格は0以上である必要があります"),
   stock: z.coerce.number().min(0, "在庫数は0以上である必要があります"),
   currency: z.string().default("JPY"),
+  imageUrl: z.string().min(1, "商品画像は必須です"),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
 interface ProductFormProps {
-  initialData?: ProductFormValues;
+  initialData?: Partial<ProductFormValues>;
   onSubmit: (
     data: ProductFormValues
   ) => Promise<{ success: boolean; error?: string }>;
@@ -35,6 +38,9 @@ interface ProductFormProps {
 
 export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
   const router = useRouter();
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.imageUrl ?? null
+  );
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: initialData || {
@@ -43,8 +49,34 @@ export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
       price: 0,
       stock: 0,
       currency: "JPY",
+      imageUrl: "",
     },
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("画像のアップロードに失敗しました");
+      }
+
+      const { url } = await response.json();
+      form.setValue("imageUrl", url);
+      setImagePreview(url);
+    } catch (error) {
+      console.error("画像のアップロードに失敗しました:", error);
+    }
+  };
 
   const handleSubmit = async (data: ProductFormValues) => {
     try {
@@ -63,6 +95,38 @@ export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>商品画像</FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="cursor-pointer"
+                  />
+                  {imagePreview && (
+                    <div className="relative aspect-square w-48">
+                      <Image
+                        src={imagePreview}
+                        alt="商品画像プレビュー"
+                        fill
+                        className="object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                  <Input type="hidden" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="name"

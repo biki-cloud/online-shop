@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle";
 import { products } from "../../schema";
 import { Product } from "../../schema";
@@ -7,6 +7,7 @@ import { USE_MOCK } from "../../../config";
 
 export async function getProducts() {
   if (USE_MOCK) {
+    console.log("mockProducts", mockProducts);
     return mockProducts;
   }
   return await db.select().from(products);
@@ -27,6 +28,7 @@ export async function getProductById(id: number) {
 export async function createProduct(
   data: Pick<Product, "name" | "description" | "price" | "stock" | "currency">
 ) {
+  console.log("createProduct");
   if (USE_MOCK) {
     const newProduct: Product = {
       id: mockProducts.length + 1,
