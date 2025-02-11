@@ -66,7 +66,6 @@ async function seedProducts() {
 
   const testProducts: NewProduct[] = [
     {
-      id: 1,
       name: "プロテインシェイク - バニラ",
       description:
         "高品質なホエイプロテインを使用した美味しいバニラ風味のプロテインシェイク。1食あたり20gのタンパク質を含有。",
@@ -80,7 +79,6 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      id: 2,
       name: "ヨガマット - プレミアム",
       description:
         "環境に優しい素材を使用した、滑り止め付きの高品質ヨガマット。厚さ6mm。",
@@ -94,7 +92,6 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      id: 3,
       name: "ダンベル 5kg セット",
       description:
         "耐久性のある素材で作られた5kgのダンベルセット。快適なグリップ付き。",
@@ -108,7 +105,6 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      id: 4,
       name: "スポーツドリンク 24本セット",
       description:
         "電解質とビタミンを含む、運動時の水分補給に最適なスポーツドリンク。",
@@ -122,7 +118,6 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      id: 5,
       name: "トレーニンググローブ",
       description:
         "手のひらの保護と滑り止め効果があるトレーニング用グローブ。サイズ：M",
@@ -136,7 +131,6 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      id: 6,
       name: "ジムバッグ - プロフェッショナル",
       description: "大容量で多機能なジムバッグ。シューズ収納部屋付き。",
       price: "6500",
