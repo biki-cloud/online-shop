@@ -17,7 +17,10 @@ interface UserStateProps {
 }
 
 export function UserState({ user }: UserStateProps) {
+  console.log("[UserState] Current user state:", user);
+
   if (!user) {
+    console.log("[UserState] No user found, showing sign-in/sign-up buttons");
     return (
       <>
         <Link href="/sign-in">
@@ -34,6 +37,7 @@ export function UserState({ user }: UserStateProps) {
     );
   }
 
+  console.log("[UserState] User is logged in:", user.email);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
