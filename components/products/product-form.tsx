@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,19 +14,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import Image from "next/image";
-
-const productFormSchema = z.object({
-  name: z.string().min(1, "商品名は必須です"),
-  description: z.string().min(1, "商品説明は必須です"),
-  price: z.coerce.number().min(0, "価格は0以上である必要があります"),
-  stock: z.coerce.number().min(0, "在庫数は0以上である必要があります"),
-  currency: z.string().default("JPY"),
-  imageUrl: z.string().min(1, "商品画像は必須です"),
-});
-
-type ProductFormValues = z.infer<typeof productFormSchema>;
+import {
+  productFormSchema,
+  type ProductFormValues,
+} from "@/lib/validations/product";
+import { useImageUpload } from "@/lib/hooks/use-image-upload";
+import { toast } from "sonner";
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormValues>;
@@ -38,9 +31,6 @@ interface ProductFormProps {
 
 export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
   const router = useRouter();
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.imageUrl ?? null
-  );
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: initialData || {
@@ -53,42 +43,24 @@ export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("画像のアップロードに失敗しました");
-      }
-
-      const { url } = await response.json();
-      form.setValue("imageUrl", url);
-      setImagePreview(url);
-    } catch (error) {
-      console.error("画像のアップロードに失敗しました:", error);
-    }
-  };
+  const { imagePreview, handleImageUpload } = useImageUpload(
+    initialData?.imageUrl ?? null,
+    form.setValue
+  );
 
   const handleSubmit = async (data: ProductFormValues) => {
     try {
       const result = await onSubmit(data);
       if (result.success) {
+        toast.success("商品を保存しました");
         router.push("/admin/products");
         router.refresh();
       } else {
-        console.error("商品の保存に失敗しました:", result.error);
+        toast.error(result.error || "商品の保存に失敗しました");
       }
     } catch (error) {
-      console.error("商品の保存に失敗しました:", error);
+      toast.error("商品の保存に失敗しました");
+      console.error(error);
     }
   };
 
@@ -162,7 +134,7 @@ export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
             <FormItem>
               <FormLabel>価格</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input type="number" min="0" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -176,7 +148,7 @@ export function ProductForm({ initialData, onSubmit }: ProductFormProps) {
             <FormItem>
               <FormLabel>在庫数</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input type="number" min="0" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
