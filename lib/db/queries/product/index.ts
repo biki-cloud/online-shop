@@ -7,7 +7,7 @@ import { USE_MOCK } from "../../../config";
 
 export async function getProducts() {
   if (USE_MOCK) {
-    console.log("mockProducts", mockProducts);
+    console.log("mockProducts");
     return mockProducts;
   }
   return await db.select().from(products);
