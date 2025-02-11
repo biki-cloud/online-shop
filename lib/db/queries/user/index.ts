@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 export async function getAllUsers() {
   try {
     const allUsers = await db.select().from(users);
-    console.log("[getAllUsers] All users in database:", allUsers);
+    console.log("[getAllUsers] All users in database:", allUsers.length);
     return allUsers;
   } catch (error) {
     console.error("[getAllUsers] Error fetching users:", error);
@@ -32,10 +32,10 @@ export async function getUser() {
       .where(eq(users.id, session.user.id))
       .limit(1);
 
-    console.log("[getUser] Query result rows:", rows);
+    console.log("[getUser] Query result rows:", rows.length);
 
     const user = rows[0];
-    console.log("[getUser] Selected user:", user);
+    console.log("[getUser] Selected user:", user.email);
     return user;
   } catch (error) {
     console.error("[getUser] Error executing query:", error);
