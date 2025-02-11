@@ -6,6 +6,7 @@ import { uploadFile } from "@/lib/storage";
 import { USE_MOCK } from "@/lib/config";
 
 export async function POST(request: Request) {
+  console.log("POST /api/upload");
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -16,7 +17,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (USE_MOCK) {
+    // if (USE_MOCK) {
+    if (false) {
+      console.log("uploadFile local");
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
       const url = `/uploads/${fileName}`;
       return NextResponse.json({ url });
     } else {
+      console.log("uploadFile s3", file);
       const { url } = await uploadFile(file);
       return NextResponse.json({ url });
     }

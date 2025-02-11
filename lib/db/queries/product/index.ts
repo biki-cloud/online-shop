@@ -38,9 +38,7 @@ export async function createProduct(
       updatedAt: new Date(),
       deletedAt: null,
     };
-    console.log("newProduct", newProduct);
     mockProducts.push(newProduct);
-    console.log("mockProducts", mockProducts);
     return newProduct;
   }
 
