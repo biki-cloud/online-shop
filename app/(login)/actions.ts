@@ -13,7 +13,7 @@ import {
   validatedAction,
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
-import { mockUser } from "@/lib/mock/user";
+import { authenticateMockUser, mockUsers, addMockUser } from "@/lib/mock/user";
 
 const USE_MOCK = process.env.USE_MOCK === "true";
 
@@ -26,6 +26,14 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
 
   if (USE_MOCK) {
+    const mockUser = await authenticateMockUser(email, password);
+    if (!mockUser) {
+      return {
+        error: "メールアドレスまたはパスワードが正しくありません。",
+        email,
+        password,
+      };
+    }
     await setSession(mockUser);
     redirect("/home");
   }
@@ -79,11 +87,30 @@ const signUpSchema = z.object({
 });
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
+  const { email, password, name } = data;
+
   if (USE_MOCK) {
-    await setSession(mockUser);
+    // メールアドレスの重複チェック
+    if (mockUsers.some((user) => user.email === email)) {
+      return {
+        error: "このメールアドレスは既に登録されています。",
+        email,
+        password,
+        name,
+      };
+    }
+
+    const passwordHash = await hashPassword(password);
+    const newUser = addMockUser({
+      email,
+      passwordHash,
+      name,
+      role: "user",
+    });
+
+    await setSession(newUser);
     redirect("/home");
   }
-  const { email, password, name } = data;
 
   const existingUser = await db
     .select()
@@ -136,7 +163,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
 export async function signOut() {
   (await cookies()).delete("session");
-  redirect("/login");
+  redirect("/sign-in");
 }
 
 const updatePasswordSchema = z
@@ -204,7 +231,7 @@ export const deleteAccount = validatedActionWithUser(
       .where(eq(users.id, user.id));
 
     (await cookies()).delete("session");
-    redirect("/login");
+    redirect("/sign-in");
   }
 );
 

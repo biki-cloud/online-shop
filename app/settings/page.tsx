@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { mockUser } from "@/lib/mock/user";
+import { getUser } from "@/lib/db/queries";
+import { mockUsers } from "@/lib/mock/user";
 import {
   Card,
   CardContent,
@@ -9,6 +10,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { redirect } from "next/navigation";
+import { User } from "@/lib/db/schema";
+
+const USE_MOCK = process.env.USE_MOCK === "true";
 
 export const metadata: Metadata = {
   title: "設定",
@@ -16,8 +21,13 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
-  // モックユーザーデータを使用
-  const user = mockUser;
+  const userData = USE_MOCK ? mockUsers[0] : await getUser();
+
+  if (!userData) {
+    redirect("/sign-in");
+  }
+
+  const user: User = userData;
 
   return (
     <div className="container max-w-4xl py-8">

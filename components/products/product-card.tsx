@@ -1,24 +1,35 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/lib/db/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <Card className="overflow-hidden" role="article">
       <CardContent className="p-0">
         <div className="relative aspect-square">
           <Image
-            src={product.imageUrl ?? ""}
+            src={
+              !imageError && product.imageUrl
+                ? product.imageUrl
+                : "/images/product-placeholder.jpg"
+            }
             alt={product.name}
             fill
             className="object-cover"
             sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
+            onError={() => setImageError(true)}
+            priority
           />
         </div>
         <div className="p-4">

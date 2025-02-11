@@ -4,7 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/auth";
-import { Loader2, ShoppingCart, ClipboardList } from "lucide-react";
+import {
+  Loader2,
+  ShoppingCart,
+  ClipboardList,
+  Package,
+  Store,
+} from "lucide-react";
 import { Suspense } from "react";
 import { UserState } from "./user-state";
 
@@ -24,6 +30,18 @@ export function Nav() {
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <nav className="flex items-center space-x-2">
+            <Link href="/products">
+              <Button variant="ghost" size="icon" className="mr-2">
+                <Store className="h-5 w-5" />
+              </Button>
+            </Link>
+            {user?.role === "admin" && (
+              <Link href="/admin/products">
+                <Button variant="ghost" size="icon" className="mr-2">
+                  <Package className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
             {user && (
               <Link href="/orders">
                 <Button variant="ghost" size="icon" className="mr-2">

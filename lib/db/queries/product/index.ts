@@ -1,11 +1,13 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle";
 import { products } from "../../schema";
+import { Product } from "../../schema";
 import { mockProducts } from "../../../mock/products";
 import { USE_MOCK } from "../../../config";
 
 export async function getProducts() {
   if (USE_MOCK) {
+    console.log("mockProducts");
     return mockProducts;
   }
   return await db.select().from(products);
@@ -21,4 +23,35 @@ export async function getProductById(id: number) {
     .where(eq(products.id, id))
     .limit(1);
   return result[0] ?? null;
+}
+
+export async function createProduct(
+  data: Pick<
+    Product,
+    "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
+  >
+) {
+  console.log("createProduct");
+  if (USE_MOCK) {
+    const newProduct: Product = {
+      id: mockProducts.length + 1,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+    mockProducts.push(newProduct);
+    return newProduct;
+  }
+
+  const [newProduct] = await db
+    .insert(products)
+    .values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  return newProduct;
 }
