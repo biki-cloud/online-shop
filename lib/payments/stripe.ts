@@ -5,12 +5,37 @@ import { calculateOrderAmount } from "@/lib/utils";
 import {
   createOrder,
   createOrderItems,
-  updateOrderStatus,
-} from "@/lib/db/queries/orders";
+  updateOrder,
+} from "@/app/actions/order";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia",
 });
+
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getFullImageUrl(imageUrl: string | null): string | undefined {
+  if (!imageUrl) return undefined;
+
+  // 既に完全なURLの場合はそのまま返す
+  if (isValidUrl(imageUrl)) {
+    return imageUrl;
+  }
+
+  // 相対パスの場合は、BASE_URLと組み合わせて完全なURLを生成
+  const baseUrl = process.env.BASE_URL?.replace(/\/$/, "");
+  if (!baseUrl) return undefined;
+
+  const fullUrl = `${baseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+  return isValidUrl(fullUrl) ? fullUrl : undefined;
+}
 
 export async function createCheckoutSession({
   userId,
@@ -36,15 +61,15 @@ export async function createCheckoutSession({
     .filter((item) => item.product !== null)
     .map((item) => {
       const priceWithTax = Math.round(Number(item.product!.price) * 1.1);
+      const fullImageUrl = getFullImageUrl(item.product!.imageUrl);
+
       return {
         price_data: {
           currency: item.product!.currency.toLowerCase(),
           product_data: {
             name: item.product!.name,
             description: item.product!.description || undefined,
-            images: item.product!.imageUrl
-              ? [item.product!.imageUrl]
-              : undefined,
+            images: fullImageUrl ? [fullImageUrl] : undefined,
           },
           unit_amount: priceWithTax,
         },
@@ -54,17 +79,13 @@ export async function createCheckoutSession({
 
   const order = await createOrder({
     userId,
-    status: "pending",
     totalAmount: total.toString(),
     currency: "JPY",
-    stripeSessionId: null,
-    stripePaymentIntentId: null,
-    shippingAddress: null,
   });
 
   await createOrderItems(
+    order.id,
     cartItems.map((item) => ({
-      orderId: order.id,
       productId: item.productId,
       quantity: item.quantity,
       price: item.product!.price,
@@ -83,7 +104,10 @@ export async function createCheckoutSession({
     },
   });
 
-  await updateOrderStatus(order.id, "pending", null, session.id);
+  await updateOrder(order.id, {
+    status: "pending",
+    stripeSessionId: session.id,
+  });
 
   redirect(session.url!);
 }
@@ -94,7 +118,10 @@ export async function handlePaymentSuccess(session: Stripe.Checkout.Session) {
     throw new Error("注文IDが見つかりません。");
   }
 
-  await updateOrderStatus(orderId, "paid", session.payment_intent as string);
+  await updateOrder(orderId, {
+    status: "paid",
+    stripePaymentIntentId: session.payment_intent as string,
+  });
 }
 
 export async function handlePaymentFailure(session: Stripe.Checkout.Session) {
@@ -103,7 +130,9 @@ export async function handlePaymentFailure(session: Stripe.Checkout.Session) {
     throw new Error("注文IDが見つかりません。");
   }
 
-  await updateOrderStatus(orderId, "failed");
+  await updateOrder(orderId, {
+    status: "failed",
+  });
 }
 
 export async function getStripePrices() {

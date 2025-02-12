@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { getUser } from "@/lib/db/queries";
-import { mockUsers } from "@/lib/mock/user";
+import { getCurrentUser } from "@/app/actions/user";
 import {
   Card,
   CardContent,
@@ -13,21 +12,17 @@ import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";
 import { User } from "@/lib/db/schema";
 
-const USE_MOCK = process.env.USE_MOCK === "true";
-
 export const metadata: Metadata = {
   title: "設定",
   description: "ユーザー設定を管理します。",
 };
 
 export default async function SettingsPage() {
-  const userData = USE_MOCK ? mockUsers[0] : await getUser();
+  const user = await getCurrentUser();
 
-  if (!userData) {
+  if (!user) {
     redirect("/sign-in");
   }
-
-  const user: User = userData;
 
   return (
     <div className="container max-w-4xl py-8">

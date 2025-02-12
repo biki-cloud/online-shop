@@ -1,10 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
-import { User, users, type NewUser } from "@/lib/db/schema";
-import { comparePasswords, hashPassword, setSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createCheckoutSession } from "@/lib/payments/stripe";
@@ -12,6 +8,8 @@ import {
   validatedAction,
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
+import { userRepository } from "@/lib/repositories/user.repository";
+import { hashPassword, setSession } from "@/lib/auth/session";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -21,14 +19,9 @@ const signInSchema = z.object({
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
 
-  const foundUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1)
-    .then((rows) => rows[0]);
+  const user = await userRepository.verifyPassword(email, password);
 
-  if (!foundUser) {
+  if (!user) {
     return {
       error: "メールアドレスまたはパスワードが正しくありません。",
       email,
@@ -36,25 +29,12 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     };
   }
 
-  const isPasswordValid = await comparePasswords(
-    password,
-    foundUser.passwordHash
-  );
-
-  if (!isPasswordValid) {
-    return {
-      error: "メールアドレスまたはパスワードが正しくありません。",
-      email,
-      password,
-    };
-  }
-
-  await setSession(foundUser);
+  await setSession(user);
 
   const redirectTo = formData.get("redirect") as string | null;
   if (redirectTo === "checkout") {
     return createCheckoutSession({
-      userId: foundUser.id,
+      userId: user.id,
       cart: null,
       cartItems: [],
     });
@@ -72,13 +52,9 @@ const signUpSchema = z.object({
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, name } = data;
 
-  const existingUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+  const existingUser = await userRepository.findByEmail(email);
 
-  if (existingUser.length > 0) {
+  if (existingUser) {
     return {
       error: "このメールアドレスは既に登録されています。",
       email,
@@ -89,14 +65,12 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   const passwordHash = await hashPassword(password);
 
-  const newUser: NewUser = {
+  const createdUser = await userRepository.create({
     email,
     passwordHash,
     name,
     role: "user",
-  };
-
-  const [createdUser] = await db.insert(users).values(newUser).returning();
+  });
 
   if (!createdUser) {
     return {
@@ -142,12 +116,12 @@ export const updatePassword = validatedActionWithUser(
   async (data, _, user) => {
     const { currentPassword, newPassword } = data;
 
-    const isPasswordValid = await comparePasswords(
-      currentPassword,
-      user.passwordHash
+    const isValid = await userRepository.verifyPassword(
+      user.email,
+      currentPassword
     );
 
-    if (!isPasswordValid) {
+    if (!isValid) {
       return { error: "現在のパスワードが正しくありません。" };
     }
 
@@ -159,10 +133,7 @@ export const updatePassword = validatedActionWithUser(
 
     const newPasswordHash = await hashPassword(newPassword);
 
-    await db
-      .update(users)
-      .set({ passwordHash: newPasswordHash })
-      .where(eq(users.id, user.id));
+    await userRepository.update(user.id, { passwordHash: newPasswordHash });
 
     return { success: "パスワードを更新しました。" };
   }
@@ -177,18 +148,12 @@ export const deleteAccount = validatedActionWithUser(
   async (data, _, user) => {
     const { password } = data;
 
-    const isPasswordValid = await comparePasswords(password, user.passwordHash);
-    if (!isPasswordValid) {
+    const isValid = await userRepository.verifyPassword(user.email, password);
+    if (!isValid) {
       return { error: "パスワードが正しくありません。" };
     }
 
-    await db
-      .update(users)
-      .set({
-        deletedAt: sql`CURRENT_TIMESTAMP`,
-        email: sql`CONCAT(email, '-', id, '-deleted')`,
-      })
-      .where(eq(users.id, user.id));
+    await userRepository.delete(user.id);
 
     (await cookies()).delete("session");
     redirect("/sign-in");
@@ -205,7 +170,7 @@ export const updateAccount = validatedActionWithUser(
   async (data, _, user) => {
     const { name, email } = data;
 
-    await db.update(users).set({ name, email }).where(eq(users.id, user.id));
+    await userRepository.update(user.id, { name, email });
 
     return { success: "アカウント情報を更新しました。" };
   }

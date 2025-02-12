@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/payments/stripe";
-import { getOrderByStripeSessionId } from "@/lib/db/queries/orders";
-import { clearCart } from "@/lib/db/queries/cart";
 import { handlePaymentSuccess } from "@/lib/payments/stripe";
+import { orderRepository } from "@/lib/repositories/order.repository";
+import { cartRepository } from "@/lib/repositories/cart.repository";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const order = await getOrderByStripeSessionId(sessionId);
+    const orders = await orderRepository.findAll();
+    const order = orders.find((o) => o.stripeSessionId === sessionId);
 
     if (!order) {
       throw new Error("Order not found for this session.");
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     if (session.payment_status === "paid") {
       await handlePaymentSuccess(session);
-      await clearCart(order.userId);
+      await cartRepository.clearCart(order.userId);
       return NextResponse.redirect(new URL("/orders/" + order.id, request.url));
     }
 

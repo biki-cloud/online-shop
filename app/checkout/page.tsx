@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { getCartForUser, getCartItems } from "@/lib/db/queries/cart";
 import { createCheckoutSession } from "@/lib/payments/stripe";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice, calculateOrderAmount } from "@/lib/utils";
+import { CartRepository } from "@/lib/repositories/cart.repository";
+
+const cartRepository = new CartRepository();
 
 export default async function CheckoutPage() {
   const session = await getSession();
@@ -18,12 +20,12 @@ export default async function CheckoutPage() {
     redirect("/sign-in");
   }
 
-  const cart = await getCartForUser(session.user.id);
+  const cart = await cartRepository.findActiveCartByUserId(session.user.id);
   if (!cart) {
     redirect("/cart");
   }
 
-  const cartItems = await getCartItems(cart.id);
+  const cartItems = await cartRepository.getCartItems(cart.id);
   if (cartItems.length === 0) {
     redirect("/cart");
   }

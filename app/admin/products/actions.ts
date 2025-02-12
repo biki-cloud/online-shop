@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createProduct } from "@/lib/db/queries/product";
+import { createProduct } from "@/app/actions/product";
 import { z } from "zod";
 
 const productSchema = z.object({
