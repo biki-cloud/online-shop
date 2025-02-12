@@ -20,6 +20,7 @@ export interface ICartRepository extends IBaseRepository<Cart> {
     quantity: number
   ): Promise<CartItem | null>;
   removeFromCart(cartItemId: number): Promise<boolean>;
+  clearCart(userId: number): Promise<void>;
 }
 
 export class CartRepository
@@ -122,4 +123,16 @@ export class CartRepository
       .returning();
     return result.length > 0;
   }
+
+  async clearCart(userId: number): Promise<void> {
+    const cart = await this.findActiveCartByUserId(userId);
+    if (!cart) return;
+
+    await db
+      .update(carts)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(carts.id, cart.id));
+  }
 }
+
+export const cartRepository = new CartRepository();

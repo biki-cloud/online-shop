@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
-import { getOrdersByUserId } from "@/lib/db/queries/orders";
+import { getUserOrders } from "@/app/actions/order";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ export default async function OrdersPage() {
     redirect("/sign-in");
   }
 
-  const orders = await getOrdersByUserId(session.user.id);
+  const orders = await getUserOrders(session.user.id);
   // 支払い済みの注文のみを表示
   const completedOrders = orders.filter((order) => order.status === "paid");
 
