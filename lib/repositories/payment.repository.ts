@@ -1,11 +1,13 @@
-import { BaseRepository, IBaseRepository } from "./base.repository";
-import type { Cart, CartItem, Product } from "@/lib/db/schema";
+import { BaseRepository } from "./base.repository";
+import type { Cart, CartItem, Order, Product } from "@/lib/db/schema";
+import { Database } from "@/lib/db/drizzle";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { calculateOrderAmount } from "@/lib/utils";
 import { updateOrder } from "@/app/actions/order";
 import { getFullImageUrl } from "@/lib/utils/url";
 import { PAYMENT_CONSTANTS, type PaymentStatus } from "@/lib/constants/payment";
+import { IPaymentRepository } from "./interfaces/payment.repository";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
@@ -18,86 +20,37 @@ class PaymentError extends Error {
   }
 }
 
-export interface IPaymentRepository
-  extends IBaseRepository<Stripe.Checkout.Session> {
-  createCheckoutSession(params: {
-    userId: number;
-    cart: Cart;
-    cartItems: (CartItem & { product: Product | null })[];
-    orderId: number;
-  }): Promise<string>;
-  handlePaymentSuccess(session: Stripe.Checkout.Session): Promise<void>;
-  handlePaymentFailure(session: Stripe.Checkout.Session): Promise<void>;
-  getStripePrices(): Promise<
-    Array<{
-      id: string;
-      productId: string;
-      unitAmount: number | null;
-      currency: string;
-      interval?: string;
-      trialPeriodDays?: number | null;
-    }>
-  >;
-  getStripeProducts(): Promise<
-    Array<{
-      id: string;
-      name: string;
-      description: string | null;
-      defaultPriceId?: string;
-    }>
-  >;
-}
-
 export class PaymentRepository implements IPaymentRepository {
-  async createCheckoutSession(params: {
+  constructor(private readonly db: Database) {}
+
+  async createCheckoutSession(data: {
     userId: number;
-    cart: Cart;
-    cartItems: (CartItem & { product: Product | null })[];
     orderId: number;
   }): Promise<string> {
-    const { userId, cart, cartItems, orderId } = params;
-
-    if (!cartItems.length) {
-      redirect("/cart");
+    const order = await this.findById(data.orderId);
+    if (!order) {
+      throw new PaymentError("注文が見つかりません。");
     }
-
-    const subtotal = cartItems.reduce(
-      (sum, item) => sum + Number(item.product!.price) * item.quantity,
-      0
-    );
-
-    const { total } = calculateOrderAmount(subtotal);
-
-    const lineItems = cartItems
-      .filter((item) => item.product !== null)
-      .map((item) => {
-        const priceWithTax = Math.round(
-          Number(item.product!.price) * PAYMENT_CONSTANTS.TAX_RATE
-        );
-        const fullImageUrl = getFullImageUrl(item.product!.imageUrl);
-
-        return {
-          price_data: {
-            currency: item.product!.currency.toLowerCase(),
-            product_data: {
-              name: item.product!.name,
-              description: item.product!.description || undefined,
-              images: fullImageUrl ? [fullImageUrl] : undefined,
-            },
-            unit_amount: priceWithTax,
-          },
-          quantity: item.quantity,
-        };
-      });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: [...PAYMENT_CONSTANTS.SUPPORTED_PAYMENT_METHODS],
-      line_items: lineItems,
+      line_items: [
+        {
+          price_data: {
+            currency: order.currency.toLowerCase(),
+            product_data: {
+              name: `注文 #${order.id}`,
+            },
+            unit_amount: Number(order.totalAmount),
+          },
+          quantity: 1,
+        },
+      ],
       mode: "payment",
       success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.BASE_URL}/cart`,
       metadata: {
-        orderId: orderId.toString(),
+        orderId: data.orderId.toString(),
       },
     });
 
@@ -108,7 +61,8 @@ export class PaymentRepository implements IPaymentRepository {
     return session.url;
   }
 
-  async handlePaymentSuccess(session: Stripe.Checkout.Session): Promise<void> {
+  async handlePaymentSuccess(sessionId: string): Promise<void> {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
     const orderId = Number(session.metadata?.orderId);
     if (!orderId) {
       throw new PaymentError("注文IDが見つかりません。");
@@ -120,7 +74,8 @@ export class PaymentRepository implements IPaymentRepository {
     });
   }
 
-  async handlePaymentFailure(session: Stripe.Checkout.Session): Promise<void> {
+  async handlePaymentFailure(sessionId: string): Promise<void> {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
     const orderId = Number(session.metadata?.orderId);
     if (!orderId) {
       throw new PaymentError("注文IDが見つかりません。");
@@ -166,25 +121,20 @@ export class PaymentRepository implements IPaymentRepository {
     }));
   }
 
-  // BaseRepositoryの実装（必要に応じて）
-  async findById(id: number): Promise<Stripe.Checkout.Session | null> {
+  // BaseRepositoryの実装
+  async findById(id: number): Promise<Order | null> {
     throw new Error("Method not implemented.");
   }
 
-  async findAll(): Promise<Stripe.Checkout.Session[]> {
+  async findAll(): Promise<Order[]> {
     throw new Error("Method not implemented.");
   }
 
-  async create(
-    data: Partial<Stripe.Checkout.Session>
-  ): Promise<Stripe.Checkout.Session> {
+  async create(data: Partial<Order>): Promise<Order> {
     throw new Error("Method not implemented.");
   }
 
-  async update(
-    id: number,
-    data: Partial<Stripe.Checkout.Session>
-  ): Promise<Stripe.Checkout.Session | null> {
+  async update(id: number, data: Partial<Order>): Promise<Order | null> {
     throw new Error("Method not implemented.");
   }
 
@@ -192,5 +142,3 @@ export class PaymentRepository implements IPaymentRepository {
     throw new Error("Method not implemented.");
   }
 }
-
-export const paymentRepository = new PaymentRepository();
