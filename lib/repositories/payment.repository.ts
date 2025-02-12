@@ -3,6 +3,7 @@ import type { Cart, CartItem, Product } from "@/lib/db/schema";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { calculateOrderAmount } from "@/lib/utils";
+import { updateOrder } from "@/app/actions/order";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
