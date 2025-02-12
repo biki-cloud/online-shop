@@ -48,9 +48,7 @@ export default async function AdminProductsPage() {
                 <TableCell>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/products/${product.id}/edit`}>
-                        編集
-                      </Link>
+                      <Link href={`/admin/products/${product.id}`}>詳細</Link>
                     </Button>
                     <DeleteProductButton productId={product.id} />
                   </div>
