@@ -1,3 +1,5 @@
+"use server";
+
 import { productRepository } from "@/lib/repositories/product.repository";
 import { Product } from "@/lib/db/schema";
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/lib/db/queries";
+import { getSession } from "@/lib/auth/session";
 import { CartItems } from "@/components/cart/cart-items";
 import { CartSummary } from "@/components/cart/cart-summary";
 import { CartRepository } from "@/lib/repositories/cart.repository";
@@ -7,7 +7,8 @@ import { CartRepository } from "@/lib/repositories/cart.repository";
 const cartRepository = new CartRepository();
 
 export default async function CartPage() {
-  const user = await getUser();
+  const session = await getSession();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");

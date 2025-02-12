@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getProducts } from "@/lib/db/queries/product";
+import { getProducts } from "@/app/actions/product";
 import { DeleteProductButton } from "@/components/products/delete-product-button";
 
 export default async function AdminProductsPage() {
