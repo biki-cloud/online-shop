@@ -4,32 +4,18 @@ import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { calculateOrderAmount } from "@/lib/utils";
 import { updateOrder } from "@/app/actions/order";
+import { getFullImageUrl } from "@/lib/utils/url";
+import { PAYMENT_CONSTANTS, type PaymentStatus } from "@/lib/constants/payment";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
 });
 
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
+class PaymentError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentError";
   }
-}
-
-function getFullImageUrl(imageUrl: string | null): string | undefined {
-  if (!imageUrl) return undefined;
-
-  if (isValidUrl(imageUrl)) {
-    return imageUrl;
-  }
-
-  const baseUrl = process.env.BASE_URL?.replace(/\/$/, "");
-  if (!baseUrl) return undefined;
-
-  const fullUrl = `${baseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
-  return isValidUrl(fullUrl) ? fullUrl : undefined;
 }
 
 export interface IPaymentRepository
@@ -85,7 +71,9 @@ export class PaymentRepository implements IPaymentRepository {
     const lineItems = cartItems
       .filter((item) => item.product !== null)
       .map((item) => {
-        const priceWithTax = Math.round(Number(item.product!.price) * 1.1);
+        const priceWithTax = Math.round(
+          Number(item.product!.price) * PAYMENT_CONSTANTS.TAX_RATE
+        );
         const fullImageUrl = getFullImageUrl(item.product!.imageUrl);
 
         return {
@@ -103,7 +91,7 @@ export class PaymentRepository implements IPaymentRepository {
       });
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: PAYMENT_CONSTANTS.SUPPORTED_PAYMENT_METHODS,
       line_items: lineItems,
       mode: "payment",
       success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
@@ -113,17 +101,21 @@ export class PaymentRepository implements IPaymentRepository {
       },
     });
 
-    return session.url!;
+    if (!session.url) {
+      throw new PaymentError("Stripeセッションの作成に失敗しました。");
+    }
+
+    return session.url;
   }
 
   async handlePaymentSuccess(session: Stripe.Checkout.Session): Promise<void> {
     const orderId = Number(session.metadata?.orderId);
     if (!orderId) {
-      throw new Error("注文IDが見つかりません。");
+      throw new PaymentError("注文IDが見つかりません。");
     }
 
     await updateOrder(orderId, {
-      status: "paid",
+      status: "paid" as PaymentStatus,
       stripePaymentIntentId: session.payment_intent as string,
     });
   }
@@ -131,11 +123,11 @@ export class PaymentRepository implements IPaymentRepository {
   async handlePaymentFailure(session: Stripe.Checkout.Session): Promise<void> {
     const orderId = Number(session.metadata?.orderId);
     if (!orderId) {
-      throw new Error("注文IDが見つかりません。");
+      throw new PaymentError("注文IDが見つかりません。");
     }
 
     await updateOrder(orderId, {
-      status: "failed",
+      status: "failed" as PaymentStatus,
     });
   }
 
