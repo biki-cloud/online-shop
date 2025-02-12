@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getUser } from "@/lib/db/queries";
+import { getCurrentUser } from "@/app/actions/user";
 import { CartRepository } from "@/lib/repositories/cart.repository";
 
 const cartRepository = new CartRepository();
 
 export async function addToCart(productId: number, quantity: number = 1) {
-  const user = await getUser();
+  const user = await getCurrentUser();
   if (!user) {
     throw new Error("ログインが必要です");
   }
@@ -28,7 +28,7 @@ export async function updateCartItemQuantity(
   cartItemId: number,
   quantity: number
 ) {
-  const user = await getUser();
+  const user = await getCurrentUser();
   if (!user) {
     throw new Error("ログインが必要です");
   }
@@ -38,7 +38,7 @@ export async function updateCartItemQuantity(
 }
 
 export async function removeFromCart(cartItemId: number) {
-  const user = await getUser();
+  const user = await getCurrentUser();
   if (!user) {
     throw new Error("ログインが必要です");
   }
