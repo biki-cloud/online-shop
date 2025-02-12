@@ -133,6 +133,8 @@ export type NewCart = typeof carts.$inferInsert;
 export type CartItem = typeof cartItems.$inferSelect;
 export type NewCartItem = typeof cartItems.$inferInsert;
 export type Order = typeof orders.$inferSelect;
-export type NewOrder = typeof orders.$inferInsert;
+export type NewOrder = Omit<typeof orders.$inferInsert, "status"> & {
+  status?: string;
+};
 export type OrderItem = typeof orderItems.$inferSelect;
 export type NewOrderItem = typeof orderItems.$inferInsert;

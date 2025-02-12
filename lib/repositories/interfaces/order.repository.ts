@@ -9,6 +9,7 @@ export interface IOrderRepository extends IBaseRepository<Order> {
     userId: number;
     totalAmount: string;
     currency: string;
+    status?: string;
     shippingAddress?: string;
     stripeSessionId?: string;
     stripePaymentIntentId?: string;
