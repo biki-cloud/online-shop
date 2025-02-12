@@ -2,13 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/db/queries";
-import {
-  getCartForUser,
-  createCart,
-  addToCart as dbAddToCart,
-  updateCartItemQuantity as dbUpdateCartItemQuantity,
-  removeFromCart as dbRemoveFromCart,
-} from "@/lib/db/queries";
+import { CartRepository } from "@/lib/repositories/cart.repository";
+
+const cartRepository = new CartRepository();
 
 export async function addToCart(productId: number, quantity: number = 1) {
   const user = await getUser();
@@ -16,12 +12,15 @@ export async function addToCart(productId: number, quantity: number = 1) {
     throw new Error("ログインが必要です");
   }
 
-  let cart = await getCartForUser(user.id);
+  let cart = await cartRepository.findActiveCartByUserId(user.id);
   if (!cart) {
-    cart = await createCart(user.id);
+    cart = await cartRepository.create({
+      userId: user.id,
+      status: "active",
+    });
   }
 
-  await dbAddToCart(cart.id, productId, quantity);
+  await cartRepository.addToCart(cart.id, productId, quantity);
   revalidatePath("/cart");
 }
 
@@ -34,7 +33,7 @@ export async function updateCartItemQuantity(
     throw new Error("ログインが必要です");
   }
 
-  await dbUpdateCartItemQuantity(cartItemId, quantity);
+  await cartRepository.updateCartItemQuantity(cartItemId, quantity);
   revalidatePath("/cart");
 }
 
@@ -44,6 +43,6 @@ export async function removeFromCart(cartItemId: number) {
     throw new Error("ログインが必要です");
   }
 
-  await dbRemoveFromCart(cartItemId);
+  await cartRepository.removeFromCart(cartItemId);
   revalidatePath("/cart");
 }
