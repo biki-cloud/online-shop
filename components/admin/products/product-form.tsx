@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Product } from "@/lib/db/schema";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { updateProduct } from "@/app/actions/product";
 import { toast } from "sonner";
+import Image from "next/image";
+import { uploadFile, deleteFile } from "@/lib/storage";
 
 interface AdminProductFormProps {
   product: Product;
@@ -17,6 +19,39 @@ interface AdminProductFormProps {
 export function AdminProductForm({ product }: AdminProductFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    product.imageUrl || null
+  );
+  const [currentFileName, setCurrentFileName] = useState<string | null>(() => {
+    if (product.imageUrl) {
+      try {
+        return new URL(product.imageUrl).pathname.split("/").pop() || null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // 古い画像を削除
+      if (currentFileName) {
+        await deleteFile(currentFileName);
+      }
+
+      // 新しい画像をアップロード
+      const { url, fileName } = await uploadFile(file);
+      setImagePreview(url);
+      setCurrentFileName(fileName);
+    } catch (error) {
+      toast.error("画像のアップロードに失敗しました");
+      console.error(error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,7 +64,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           description: formData.get("description") as string,
           price: formData.get("price") as string,
           stock: Number(formData.get("stock")),
-          imageUrl: formData.get("imageUrl") as string,
+          imageUrl: imagePreview,
         });
 
         if (updatedProduct) {
@@ -93,14 +128,48 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           />
         </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="imageUrl">商品画像URL</Label>
-        <Input
-          id="imageUrl"
-          name="imageUrl"
-          type="url"
-          defaultValue={product.imageUrl || ""}
-        />
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="image">商品画像</Label>
+          <Input
+            id="image"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="mt-2"
+          />
+        </div>
+        {imagePreview && (
+          <div className="relative aspect-square w-64">
+            <Image
+              src={imagePreview}
+              alt="商品画像プレビュー"
+              fill
+              className="object-cover rounded-lg"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="absolute top-2 right-2"
+              onClick={async () => {
+                if (currentFileName) {
+                  try {
+                    await deleteFile(currentFileName);
+                    setImagePreview(null);
+                    setCurrentFileName(null);
+                  } catch (error) {
+                    toast.error("画像の削除に失敗しました");
+                    console.error(error);
+                  }
+                }
+              }}
+            >
+              削除
+            </Button>
+          </div>
+        )}
       </div>
       <div className="flex justify-end space-x-4">
         <Button
