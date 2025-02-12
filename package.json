@@ -7,8 +7,10 @@
     "local:setup": "npx tsx lib/setup/setup.ts",
     "db:seed": "npx tsx lib/db/seed.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "npx tsx lib/db/migrate.ts",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:reset": "drizzle-kit generate && drizzle-kit push && pnpm db:seed",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

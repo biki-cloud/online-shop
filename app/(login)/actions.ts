@@ -8,14 +8,10 @@ import { comparePasswords, hashPassword, setSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createCheckoutSession } from "@/lib/payments/stripe";
-import { getUser } from "@/lib/db/queries";
 import {
   validatedAction,
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
-import { authenticateMockUser, mockUsers, addMockUser } from "@/lib/mock/user";
-
-const USE_MOCK = process.env.USE_MOCK === "true";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -24,19 +20,6 @@ const signInSchema = z.object({
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
-
-  if (USE_MOCK) {
-    const mockUser = await authenticateMockUser(email, password);
-    if (!mockUser) {
-      return {
-        error: "メールアドレスまたはパスワードが正しくありません。",
-        email,
-        password,
-      };
-    }
-    await setSession(mockUser);
-    redirect("/home");
-  }
 
   const foundUser = await db
     .select()
@@ -88,29 +71,6 @@ const signUpSchema = z.object({
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, name } = data;
-
-  if (USE_MOCK) {
-    // メールアドレスの重複チェック
-    if (mockUsers.some((user) => user.email === email)) {
-      return {
-        error: "このメールアドレスは既に登録されています。",
-        email,
-        password,
-        name,
-      };
-    }
-
-    const passwordHash = await hashPassword(password);
-    const newUser = addMockUser({
-      email,
-      passwordHash,
-      name,
-      role: "user",
-    });
-
-    await setSession(newUser);
-    redirect("/home");
-  }
 
   const existingUser = await db
     .select()

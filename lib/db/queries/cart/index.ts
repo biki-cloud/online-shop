@@ -2,22 +2,8 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../drizzle";
 import { carts, cartItems, products } from "../../schema";
 import type { Cart, CartItem, Product } from "../../schema";
-import {
-  getMockCart,
-  createMockCart,
-  getMockCartItems,
-  addMockCartItem,
-  updateMockCartItemQuantity,
-  removeMockCartItem,
-  clearMockCart,
-} from "../../../mock/cart";
-import { USE_MOCK } from "../../../config";
 
 export async function getCartForUser(userId: number): Promise<Cart | null> {
-  if (USE_MOCK) {
-    return getMockCart(userId);
-  }
-
   const result = await db
     .select()
     .from(carts)
@@ -30,10 +16,6 @@ export async function getCartForUser(userId: number): Promise<Cart | null> {
 export async function getCartItems(
   cartId: number
 ): Promise<(CartItem & { product: Product | null })[]> {
-  if (USE_MOCK) {
-    return getMockCartItems(cartId);
-  }
-
   return await db
     .select({
       id: cartItems.id,
@@ -50,10 +32,6 @@ export async function getCartItems(
 }
 
 export async function createCart(userId: number): Promise<Cart> {
-  if (USE_MOCK) {
-    return createMockCart(userId);
-  }
-
   const result = await db
     .insert(carts)
     .values({
@@ -70,10 +48,6 @@ export async function addToCart(
   productId: number,
   quantity: number = 1
 ): Promise<CartItem> {
-  if (USE_MOCK) {
-    return addMockCartItem(cartId, productId, quantity);
-  }
-
   const existingItem = await db
     .select()
     .from(cartItems)
@@ -112,10 +86,6 @@ export async function updateCartItemQuantity(
   cartItemId: number,
   quantity: number
 ): Promise<CartItem> {
-  if (USE_MOCK) {
-    return updateMockCartItemQuantity(cartItemId, quantity);
-  }
-
   const result = await db
     .update(cartItems)
     .set({
@@ -129,17 +99,9 @@ export async function updateCartItemQuantity(
 }
 
 export async function removeFromCart(cartItemId: number): Promise<void> {
-  if (USE_MOCK) {
-    return removeMockCartItem(cartItemId);
-  }
-
   await db.delete(cartItems).where(eq(cartItems.id, cartItemId));
 }
 
 export async function clearCart(cartId: number) {
-  if (USE_MOCK) {
-    return clearMockCart(cartId);
-  }
-
   await db.delete(cartItems).where(eq(cartItems.cartId, cartId));
 }
