@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { CartItems } from "@/components/cart/cart-items";
 import { CartSummary } from "@/components/cart/cart-summary";
-import { CartRepository } from "@/lib/repositories/cart.repository";
-
-const cartRepository = new CartRepository();
+import { db } from "@/lib/db/drizzle";
+import { createContainer } from "@/lib/di/container";
 
 export default async function CartPage() {
   const session = await getSession();
@@ -14,7 +13,8 @@ export default async function CartPage() {
     redirect("/sign-in");
   }
 
-  const cart = await cartRepository.findActiveCartByUserId(user.id);
+  const container = createContainer(db);
+  const cart = await container.cartRepository.findActiveCartByUserId(user.id);
 
   if (!cart) {
     return (
@@ -25,7 +25,7 @@ export default async function CartPage() {
     );
   }
 
-  const cartItems = await cartRepository.getCartItems(cart.id);
+  const cartItems = await container.cartRepository.getCartItems(cart.id);
 
   return (
     <div className="container py-8">

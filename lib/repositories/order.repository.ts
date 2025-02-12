@@ -1,15 +1,28 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/drizzle";
+import { Database } from "../db/drizzle";
 import { Order, OrderItem, orders, orderItems, products } from "../db/schema";
 import { IOrderRepository } from "./interfaces/order.repository";
+import { BaseRepository } from "./base.repository";
+import { PgColumn } from "drizzle-orm/pg-core";
 
-export class OrderRepository implements IOrderRepository {
+export class OrderRepository
+  extends BaseRepository<Order>
+  implements IOrderRepository
+{
+  constructor(db: Database) {
+    super(db, orders);
+  }
+
+  protected get idColumn(): PgColumn<any> {
+    return orders.id;
+  }
+
   async findAll(): Promise<Order[]> {
-    return await db.select().from(orders);
+    return await this.db.select().from(orders);
   }
 
   async findById(id: number): Promise<Order | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(orders)
       .where(eq(orders.id, id))
@@ -18,7 +31,7 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async findByUserId(userId: number): Promise<Order[]> {
-    return await db
+    return await this.db
       .select()
       .from(orders)
       .where(eq(orders.userId, userId))
@@ -33,7 +46,7 @@ export class OrderRepository implements IOrderRepository {
     stripeSessionId?: string;
     stripePaymentIntentId?: string;
   }): Promise<Order> {
-    const [order] = await db
+    const [order] = await this.db
       .insert(orders)
       .values({
         ...data,
@@ -62,7 +75,10 @@ export class OrderRepository implements IOrderRepository {
       updatedAt: new Date(),
     }));
 
-    return await db.insert(orderItems).values(orderItemsToInsert).returning();
+    return await this.db
+      .insert(orderItems)
+      .values(orderItemsToInsert)
+      .returning();
   }
 
   async update(
@@ -73,7 +89,7 @@ export class OrderRepository implements IOrderRepository {
       stripePaymentIntentId: string;
     }>
   ): Promise<Order | null> {
-    const [updatedOrder] = await db
+    const [updatedOrder] = await this.db
       .update(orders)
       .set({
         ...data,
@@ -94,7 +110,7 @@ export class OrderRepository implements IOrderRepository {
       } | null;
     })[]
   > {
-    return await db
+    return await this.db
       .select({
         id: orderItems.id,
         orderId: orderItems.orderId,
@@ -115,5 +131,3 @@ export class OrderRepository implements IOrderRepository {
       .where(eq(orderItems.orderId, orderId));
   }
 }
-
-export const orderRepository = new OrderRepository();

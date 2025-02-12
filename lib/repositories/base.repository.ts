@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
 import { PgTable, TableConfig, PgColumn } from "drizzle-orm/pg-core";
+import { Database } from "@/lib/db/drizzle";
 
 export interface IBaseRepository<T> {
   findById(id: number): Promise<T | null>;
@@ -11,12 +11,15 @@ export interface IBaseRepository<T> {
 }
 
 export abstract class BaseRepository<T> implements IBaseRepository<T> {
-  constructor(protected readonly table: PgTable<TableConfig>) {}
+  constructor(
+    protected readonly db: Database,
+    protected readonly table: PgTable<TableConfig>
+  ) {}
 
   protected abstract get idColumn(): PgColumn<any>;
 
   async findById(id: number): Promise<T | null> {
-    const [result] = await db
+    const [result] = await this.db
       .select()
       .from(this.table)
       .where(eq(this.idColumn, id))
@@ -25,12 +28,12 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
   }
 
   async findAll(): Promise<T[]> {
-    const result = await db.select().from(this.table);
+    const result = await this.db.select().from(this.table);
     return result as T[];
   }
 
   async create(data: Partial<T>): Promise<T> {
-    const [result] = await db
+    const [result] = await this.db
       .insert(this.table)
       .values(data as any)
       .returning();
@@ -38,7 +41,7 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
   }
 
   async update(id: number, data: Partial<T>): Promise<T | null> {
-    const [result] = await db
+    const [result] = await this.db
       .update(this.table)
       .set({ ...data, updatedAt: new Date() } as any)
       .where(eq(this.idColumn, id))
@@ -47,7 +50,7 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
   }
 
   async delete(id: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .delete(this.table)
       .where(eq(this.idColumn, id))
       .returning();

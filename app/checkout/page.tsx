@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { createCheckoutSession } from "@/lib/payments/stripe";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,9 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice, calculateOrderAmount } from "@/lib/utils";
-import { CartRepository } from "@/lib/repositories/cart.repository";
-
-const cartRepository = new CartRepository();
+import { db } from "@/lib/db/drizzle";
+import { createContainer } from "@/lib/di/container";
+import { CartItem } from "@/lib/db/schema";
+import { PaymentService } from "@/lib/services/payment.service";
 
 export default async function CheckoutPage() {
   const session = await getSession();
@@ -20,20 +20,26 @@ export default async function CheckoutPage() {
     redirect("/sign-in");
   }
 
-  const cart = await cartRepository.findActiveCartByUserId(session.user.id);
+  const container = createContainer(db);
+  const cart = await container.cartRepository.findActiveCartByUserId(
+    session.user.id
+  );
   if (!cart) {
     redirect("/cart");
   }
 
-  const cartItems = await cartRepository.getCartItems(cart.id);
+  const cartItems = await container.cartRepository.getCartItems(cart.id);
   if (cartItems.length === 0) {
     redirect("/cart");
   }
 
-  const subtotal = cartItems.reduce((acc, item) => {
-    if (!item.product) return acc;
-    return acc + Number(item.product.price) * item.quantity;
-  }, 0);
+  const subtotal = cartItems.reduce(
+    (acc: number, item: CartItem & { product: any }) => {
+      if (!item.product) return acc;
+      return acc + Number(item.product.price) * item.quantity;
+    },
+    0
+  );
 
   const { tax, total } = calculateOrderAmount(subtotal);
 
@@ -41,13 +47,15 @@ export default async function CheckoutPage() {
     "use server";
 
     const currentSession = await getSession();
-    if (!currentSession?.user || !cart) return;
+    if (!currentSession?.user) return;
 
-    await createCheckoutSession({
-      userId: currentSession.user.id,
-      cart,
-      cartItems,
-    });
+    const container = createContainer(db);
+    const paymentService = new PaymentService(
+      container.paymentRepository,
+      container.cartRepository,
+      container.orderRepository
+    );
+    await paymentService.processCheckout(currentSession.user.id);
   }
 
   return (
@@ -58,7 +66,7 @@ export default async function CheckoutPage() {
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {cartItems.map((item: CartItem & { product: any }) => (
               <div key={item.id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {item.product?.imageUrl && (

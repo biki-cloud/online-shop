@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/payments/stripe";
-import { handlePaymentSuccess } from "@/lib/payments/stripe";
-import { orderRepository } from "@/lib/repositories/order.repository";
-import { cartRepository } from "@/lib/repositories/cart.repository";
+import { db } from "@/lib/db/drizzle";
+import { createContainer } from "@/lib/di/container";
+import { PaymentService } from "@/lib/services/payment.service";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,7 +14,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const orders = await orderRepository.findAll();
+    const container = createContainer(db);
+    const paymentService = new PaymentService(
+      container.paymentRepository,
+      container.cartRepository,
+      container.orderRepository
+    );
+
+    const orders = await container.orderRepository.findAll();
     const order = orders.find((o) => o.stripeSessionId === sessionId);
 
     if (!order) {
@@ -22,8 +29,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (session.payment_status === "paid") {
-      await handlePaymentSuccess(session);
-      await cartRepository.clearCart(order.userId);
+      await paymentService.handlePaymentSuccess(session);
+      await container.cartRepository.clearCart(order.userId);
       return NextResponse.redirect(new URL("/orders/" + order.id, request.url));
     }
 
