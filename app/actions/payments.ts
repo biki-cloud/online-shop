@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createCheckoutSession } from "./stripe";
-import { getCartItems, getCartForUser } from "@/lib/db/queries/cart";
+import { createCheckoutSession } from "@/lib/payments/stripe";
+import { cartRepository } from "@/lib/repositories/cart.repository";
 import { getSession } from "@/lib/auth/session";
 
 export async function checkoutAction(formData: FormData) {
@@ -11,12 +11,12 @@ export async function checkoutAction(formData: FormData) {
     redirect("/sign-in");
   }
 
-  const cart = await getCartForUser(session.user.id);
+  const cart = await cartRepository.findActiveCartByUserId(session.user.id);
   if (!cart) {
     redirect("/cart");
   }
 
-  const cartItems = await getCartItems(cart.id);
+  const cartItems = await cartRepository.getCartItems(cart.id);
   if (!cartItems || cartItems.length === 0) {
     redirect("/cart");
   }
