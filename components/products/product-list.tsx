@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getProducts } from "@/lib/db/queries";
+import { getProducts } from "@/app/actions/product";
 import { ProductCard } from "./product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 

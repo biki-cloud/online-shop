@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ProductDetails } from "@/components/products/product-details";
-import { getProductById } from "@/lib/db/queries";
+import { getProductById } from "@/app/actions/product";
 
 interface ProductPageProps {
   params: {
