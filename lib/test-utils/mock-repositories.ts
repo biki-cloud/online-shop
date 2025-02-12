@@ -1,5 +1,7 @@
-import { Cart, CartItem, Product } from "@/lib/db/schema";
+import { Cart, CartItem, Order, OrderItem, Product } from "@/lib/db/schema";
 import { ICartRepository } from "@/lib/repositories/interfaces/cart.repository";
+import { IOrderRepository } from "@/lib/repositories/interfaces/order.repository";
+import { IPaymentRepository } from "@/lib/repositories/interfaces/payment.repository";
 
 export class MockCartRepository implements ICartRepository {
   private carts: Cart[] = [];
@@ -113,5 +115,203 @@ export class MockCartRepository implements ICartRepository {
 
     cart.status = "completed";
     cart.updatedAt = new Date();
+  }
+}
+
+export class MockOrderRepository implements IOrderRepository {
+  private orders: Order[] = [];
+  private orderItems: (OrderItem & {
+    product: {
+      id: number;
+      name: string;
+      imageUrl: string | null;
+    } | null;
+  })[] = [];
+
+  async findAll(): Promise<Order[]> {
+    return this.orders;
+  }
+
+  async findById(id: number): Promise<Order | null> {
+    return this.orders.find((order) => order.id === id) || null;
+  }
+
+  async findByUserId(userId: number): Promise<Order[]> {
+    return this.orders.filter((order) => order.userId === userId);
+  }
+
+  async create(data: {
+    userId: number;
+    totalAmount: string;
+    currency: string;
+    status?: string;
+    shippingAddress?: string;
+    stripeSessionId?: string;
+    stripePaymentIntentId?: string;
+  }): Promise<Order> {
+    const order = {
+      id: this.orders.length + 1,
+      userId: data.userId,
+      totalAmount: data.totalAmount,
+      currency: data.currency,
+      status: data.status || "pending",
+      shippingAddress: data.shippingAddress || null,
+      stripeSessionId: data.stripeSessionId || null,
+      stripePaymentIntentId: data.stripePaymentIntentId || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.orders.push(order);
+    return order;
+  }
+
+  async createOrderItems(
+    orderId: number,
+    items: {
+      productId: number;
+      quantity: number;
+      price: string;
+      currency: string;
+    }[]
+  ): Promise<OrderItem[]> {
+    const newItems = items.map((item, index) => ({
+      id: this.orderItems.length + index + 1,
+      orderId,
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+      currency: item.currency,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      product: null,
+    }));
+    this.orderItems.push(...newItems);
+    return newItems;
+  }
+
+  async update(
+    id: number,
+    data: Partial<{
+      status: string;
+      stripeSessionId: string;
+      stripePaymentIntentId: string;
+    }>
+  ): Promise<Order | null> {
+    const index = this.orders.findIndex((order) => order.id === id);
+    if (index === -1) return null;
+
+    this.orders[index] = {
+      ...this.orders[index],
+      ...data,
+      updatedAt: new Date(),
+    };
+    return this.orders[index];
+  }
+
+  async delete(id: number): Promise<boolean> {
+    const index = this.orders.findIndex((order) => order.id === id);
+    if (index === -1) return false;
+
+    this.orders.splice(index, 1);
+    return true;
+  }
+
+  async getOrderItems(orderId: number): Promise<
+    (OrderItem & {
+      product: {
+        id: number;
+        name: string;
+        imageUrl: string | null;
+      } | null;
+    })[]
+  > {
+    return this.orderItems.filter((item) => item.orderId === orderId);
+  }
+}
+
+export class MockPaymentRepository implements IPaymentRepository {
+  private orders: Order[] = [];
+
+  async findAll(): Promise<Order[]> {
+    return this.orders;
+  }
+
+  async findById(id: number): Promise<Order | null> {
+    return this.orders.find((order) => order.id === id) || null;
+  }
+
+  async create(data: {
+    userId: number;
+    totalAmount: string;
+    currency: string;
+    status?: string;
+    shippingAddress?: string;
+    stripeSessionId?: string;
+    stripePaymentIntentId?: string;
+  }): Promise<Order> {
+    const order = {
+      id: this.orders.length + 1,
+      userId: data.userId,
+      totalAmount: data.totalAmount,
+      currency: data.currency,
+      status: data.status || "pending",
+      shippingAddress: data.shippingAddress || null,
+      stripeSessionId: data.stripeSessionId || null,
+      stripePaymentIntentId: data.stripePaymentIntentId || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.orders.push(order);
+    return order;
+  }
+
+  async update(
+    id: number,
+    data: Partial<{
+      status: string;
+      stripeSessionId: string;
+      stripePaymentIntentId: string;
+    }>
+  ): Promise<Order | null> {
+    const index = this.orders.findIndex((order) => order.id === id);
+    if (index === -1) return null;
+
+    this.orders[index] = {
+      ...this.orders[index],
+      ...data,
+      updatedAt: new Date(),
+    };
+    return this.orders[index];
+  }
+
+  async delete(id: number): Promise<boolean> {
+    const index = this.orders.findIndex((order) => order.id === id);
+    if (index === -1) return false;
+
+    this.orders.splice(index, 1);
+    return true;
+  }
+
+  async createCheckoutSession(data: {
+    userId: number;
+    orderId: number;
+  }): Promise<string> {
+    return `mock_session_${data.orderId}`;
+  }
+
+  async handlePaymentSuccess(sessionId: string): Promise<void> {
+    // モックの実装では何もしない
+  }
+
+  async handlePaymentFailure(sessionId: string): Promise<void> {
+    // モックの実装では何もしない
+  }
+
+  async getStripePrices(): Promise<any[]> {
+    return [];
+  }
+
+  async getStripeProducts(): Promise<any[]> {
+    return [];
   }
 }
