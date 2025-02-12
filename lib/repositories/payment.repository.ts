@@ -91,7 +91,7 @@ export class PaymentRepository implements IPaymentRepository {
       });
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: PAYMENT_CONSTANTS.SUPPORTED_PAYMENT_METHODS,
+      payment_method_types: [...PAYMENT_CONSTANTS.SUPPORTED_PAYMENT_METHODS],
       line_items: lineItems,
       mode: "payment",
       success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
