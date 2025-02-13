@@ -9,20 +9,25 @@ interface Props {
   };
 }
 
-export default async function AdminProductDetailPage({ params }: Props) {
-  const isAdmin = await checkAdmin();
-  if (!isAdmin) {
+export default async function AdminProductDetailPage(props: Props) {
+  try {
+    const params = await Promise.resolve(props.params);
+    const [isAdmin, product] = await Promise.all([
+      checkAdmin(),
+      getProductById(Number(params.id)),
+    ]);
+
+    if (!isAdmin || !product) {
+      notFound();
+    }
+
+    return (
+      <div className="container py-6">
+        <AdminProductDetail product={product} />
+      </div>
+    );
+  } catch (error) {
+    console.error("Error loading product:", error);
     notFound();
   }
-
-  const product = await getProductById(Number(params.id));
-  if (!product) {
-    notFound();
-  }
-
-  return (
-    <div className="container py-6">
-      <AdminProductDetail product={product} />
-    </div>
-  );
 }

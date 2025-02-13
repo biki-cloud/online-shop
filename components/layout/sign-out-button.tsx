@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from "@/app/(login)/actions";
+import { signOut } from "@/app/actions/auth";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 export function SignOutButton() {

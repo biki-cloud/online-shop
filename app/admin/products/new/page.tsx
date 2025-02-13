@@ -1,5 +1,5 @@
+import { createProductAction } from "@/app/actions/admin-products";
 import { ProductForm } from "@/components/products/product-form";
-import { createProductAction } from "../actions";
 
 export default function NewProductPage() {
   return (

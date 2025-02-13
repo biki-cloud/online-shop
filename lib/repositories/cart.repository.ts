@@ -1,34 +1,23 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
-import { carts, cartItems, products } from "@/lib/db/schema";
-import type { Cart, CartItem, Product } from "@/lib/db/schema";
-import { BaseRepository, IBaseRepository } from "./base.repository";
+import {
+  Cart,
+  CartItem,
+  Product,
+  cartItems,
+  carts,
+  products,
+} from "../db/schema";
+import { BaseRepository } from "./base.repository";
+import { ICartRepository } from "./interfaces/cart.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
-
-export interface ICartRepository extends IBaseRepository<Cart> {
-  findActiveCartByUserId(userId: number): Promise<Cart | null>;
-  getCartItems(
-    cartId: number
-  ): Promise<(CartItem & { product: Product | null })[]>;
-  addToCart(
-    cartId: number,
-    productId: number,
-    quantity?: number
-  ): Promise<CartItem>;
-  updateCartItemQuantity(
-    cartItemId: number,
-    quantity: number
-  ): Promise<CartItem | null>;
-  removeFromCart(cartItemId: number): Promise<boolean>;
-  clearCart(userId: number): Promise<void>;
-}
+import { Database } from "../db/drizzle";
 
 export class CartRepository
   extends BaseRepository<Cart>
   implements ICartRepository
 {
-  constructor() {
-    super(carts);
+  constructor(db: Database) {
+    super(db, carts);
   }
 
   protected get idColumn(): PgColumn<any> {
@@ -36,7 +25,7 @@ export class CartRepository
   }
 
   async findActiveCartByUserId(userId: number): Promise<Cart | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(carts)
       .where(and(eq(carts.userId, userId), eq(carts.status, "active")))
@@ -47,7 +36,7 @@ export class CartRepository
   async getCartItems(
     cartId: number
   ): Promise<(CartItem & { product: Product | null })[]> {
-    return await db
+    return await this.db
       .select({
         id: cartItems.id,
         cartId: cartItems.cartId,
@@ -67,7 +56,7 @@ export class CartRepository
     productId: number,
     quantity: number = 1
   ): Promise<CartItem> {
-    const existingItem = await db
+    const existingItem = await this.db
       .select()
       .from(cartItems)
       .where(
@@ -76,7 +65,7 @@ export class CartRepository
       .limit(1);
 
     if (existingItem.length > 0) {
-      const result = await db
+      const result = await this.db
         .update(cartItems)
         .set({
           quantity: existingItem[0].quantity + quantity,
@@ -89,7 +78,7 @@ export class CartRepository
       return result[0];
     }
 
-    const result = await db
+    const result = await this.db
       .insert(cartItems)
       .values({
         cartId,
@@ -105,7 +94,7 @@ export class CartRepository
     cartItemId: number,
     quantity: number
   ): Promise<CartItem | null> {
-    const result = await db
+    const result = await this.db
       .update(cartItems)
       .set({
         quantity,
@@ -117,7 +106,7 @@ export class CartRepository
   }
 
   async removeFromCart(cartItemId: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .delete(cartItems)
       .where(eq(cartItems.id, cartItemId))
       .returning();
@@ -128,11 +117,9 @@ export class CartRepository
     const cart = await this.findActiveCartByUserId(userId);
     if (!cart) return;
 
-    await db
+    await this.db
       .update(carts)
       .set({ status: "completed", updatedAt: new Date() })
       .where(eq(carts.id, cart.id));
   }
 }
-
-export const cartRepository = new CartRepository();

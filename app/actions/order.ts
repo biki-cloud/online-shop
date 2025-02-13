@@ -1,18 +1,22 @@
 "use server";
 
-import { orderRepository } from "@/lib/repositories/order.repository";
 import { Order, OrderItem } from "@/lib/db/schema";
+import { db } from "@/lib/db/drizzle";
+import { createContainer } from "@/lib/di/container";
 
 export async function getOrders(): Promise<Order[]> {
-  return await orderRepository.findAll();
+  const container = createContainer(db);
+  return await container.orderRepository.findAll();
 }
 
 export async function getOrderById(id: number): Promise<Order | null> {
-  return await orderRepository.findById(id);
+  const container = createContainer(db);
+  return await container.orderRepository.findById(id);
 }
 
 export async function getUserOrders(userId: number): Promise<Order[]> {
-  return await orderRepository.findByUserId(userId);
+  const container = createContainer(db);
+  return await container.orderRepository.findByUserId(userId);
 }
 
 export async function createOrder(data: {
@@ -23,7 +27,8 @@ export async function createOrder(data: {
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
 }): Promise<Order> {
-  return await orderRepository.create(data);
+  const container = createContainer(db);
+  return await container.orderRepository.create(data);
 }
 
 export async function createOrderItems(
@@ -35,7 +40,8 @@ export async function createOrderItems(
     currency: string;
   }[]
 ): Promise<OrderItem[]> {
-  return await orderRepository.createOrderItems(orderId, items);
+  const container = createContainer(db);
+  return await container.orderRepository.createOrderItems(orderId, items);
 }
 
 export async function updateOrder(
@@ -46,7 +52,8 @@ export async function updateOrder(
     stripePaymentIntentId: string;
   }>
 ): Promise<Order | null> {
-  return await orderRepository.update(id, data);
+  const container = createContainer(db);
+  return await container.orderRepository.update(id, data);
 }
 
 export async function getOrderItems(orderId: number): Promise<
@@ -58,5 +65,6 @@ export async function getOrderItems(orderId: number): Promise<
     } | null;
   })[]
 > {
-  return await orderRepository.getOrderItems(orderId);
+  const container = createContainer(db);
+  return await container.orderRepository.getOrderItems(orderId);
 }

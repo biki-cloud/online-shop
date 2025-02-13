@@ -1,16 +1,18 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/drizzle";
+import { Database } from "@/lib/db/drizzle";
 import { User, NewUser, users } from "../db/schema";
 import { IUserRepository } from "./interfaces/user.repository";
 import { comparePasswords } from "@/lib/auth/session";
 
 export class UserRepository implements IUserRepository {
+  constructor(private readonly db: Database) {}
+
   async findAll(): Promise<User[]> {
-    return await db.select().from(users);
+    return await this.db.select().from(users);
   }
 
   async findById(id: number): Promise<User | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(users)
       .where(eq(users.id, id))
@@ -19,7 +21,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -28,7 +30,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async create(data: NewUser): Promise<User> {
-    const [user] = await db
+    const [user] = await this.db
       .insert(users)
       .values({
         ...data,
@@ -41,7 +43,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async update(id: number, data: Partial<User>): Promise<User | null> {
-    const [updatedUser] = await db
+    const [updatedUser] = await this.db
       .update(users)
       .set({
         ...data,
@@ -54,7 +56,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async delete(id: number): Promise<boolean> {
-    const [deletedUser] = await db
+    const [deletedUser] = await this.db
       .update(users)
       .set({
         deletedAt: new Date(),
@@ -74,5 +76,3 @@ export class UserRepository implements IUserRepository {
     return isValid ? user : null;
   }
 }
-
-export const userRepository = new UserRepository();
