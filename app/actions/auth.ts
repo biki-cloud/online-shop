@@ -8,8 +8,12 @@ import {
   validatedAction,
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
-import { userRepository } from "@/lib/repositories/user.repository";
 import { hashPassword, setSession } from "@/lib/auth/session";
+import { db } from "@/lib/db/drizzle";
+import { createContainer } from "@/lib/di/container";
+
+const container = createContainer(db);
+const userRepository = container.userRepository;
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
