@@ -11,8 +11,10 @@ import { UserRepository } from "@/lib/repositories/user.repository";
 import { ProductRepository } from "@/lib/repositories/product.repository";
 import { ICartService } from "../services/interfaces/cart.service";
 import { IProductService } from "../services/interfaces/product.service";
+import { IPaymentService } from "../services/interfaces/payment.service";
 import { CartService } from "../services/cart.service";
 import { ProductService } from "../services/product.service";
+import { PaymentService } from "../services/payment.service";
 
 export interface DIContainer {
   db: Database;
@@ -23,6 +25,7 @@ export interface DIContainer {
   productRepository: IProductRepository;
   cartService: ICartService;
   productService: IProductService;
+  paymentService: IPaymentService;
 }
 
 export const createContainer = (db: Database): DIContainer => {
@@ -41,5 +44,10 @@ export const createContainer = (db: Database): DIContainer => {
     productRepository,
     cartService: new CartService(cartRepository),
     productService: new ProductService(productRepository),
+    paymentService: new PaymentService(
+      paymentRepository,
+      cartRepository,
+      orderRepository
+    ),
   };
 };
