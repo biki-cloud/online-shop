@@ -1,22 +1,13 @@
-import { Product } from "@/lib/db/schema";
+import {
+  Product,
+  CreateProductInput,
+  UpdateProductInput,
+} from "@/lib/domain/product";
 
 export interface IProductService {
   findById(id: number): Promise<Product | null>;
   findAll(): Promise<Product[]>;
-  create(
-    data: Pick<
-      Product,
-      "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
-    >
-  ): Promise<Product>;
-  update(
-    id: number,
-    data: Partial<
-      Pick<
-        Product,
-        "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
-      >
-    >
-  ): Promise<Product | null>;
+  create(data: CreateProductInput): Promise<Product>;
+  update(id: number, data: UpdateProductInput): Promise<Product | null>;
   delete(id: number): Promise<boolean>;
 }

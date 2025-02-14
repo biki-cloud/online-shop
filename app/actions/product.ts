@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getContainer } from "@/lib/di/container-provider";
-import { Product } from "@/lib/db/schema";
+import {
+  Product,
+  CreateProductInput,
+  UpdateProductInput,
+} from "@/lib/domain/product";
 
 export async function getProducts(): Promise<Product[]> {
   const container = getContainer();
@@ -15,10 +19,7 @@ export async function getProduct(id: number): Promise<Product | null> {
 }
 
 export async function createProduct(
-  data: Pick<
-    Product,
-    "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
-  >
+  data: CreateProductInput
 ): Promise<Product> {
   const container = getContainer();
   const product = await container.productService.create(data);
@@ -28,12 +29,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: number,
-  data: Partial<
-    Pick<
-      Product,
-      "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
-    >
-  >
+  data: UpdateProductInput
 ): Promise<Product | null> {
   const container = getContainer();
   const product = await container.productService.update(id, data);
