@@ -7,6 +7,8 @@ import { CartRepository } from "@/lib/repositories/cart.repository";
 import { OrderRepository } from "@/lib/repositories/order.repository";
 import { PaymentRepository } from "@/lib/repositories/payment.repository";
 import { UserRepository } from "@/lib/repositories/user.repository";
+import { ICartService } from "../services/interfaces/cart.service";
+import { CartService } from "../services/cart.service";
 
 export interface DIContainer {
   db: Database;
@@ -14,14 +16,21 @@ export interface DIContainer {
   orderRepository: IOrderRepository;
   paymentRepository: IPaymentRepository;
   userRepository: IUserRepository;
+  cartService: ICartService;
 }
 
 export const createContainer = (db: Database): DIContainer => {
+  const cartRepository = new CartRepository(db);
+  const orderRepository = new OrderRepository(db);
+  const paymentRepository = new PaymentRepository(db);
+  const userRepository = new UserRepository(db);
+
   return {
     db,
-    cartRepository: new CartRepository(db),
-    orderRepository: new OrderRepository(db),
-    paymentRepository: new PaymentRepository(db),
-    userRepository: new UserRepository(db),
+    cartRepository,
+    orderRepository,
+    paymentRepository,
+    userRepository,
+    cartService: new CartService(cartRepository),
   };
 };
