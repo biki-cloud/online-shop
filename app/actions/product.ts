@@ -1,14 +1,17 @@
 "use server";
 
-import { productRepository } from "@/lib/repositories/product.repository";
+import { revalidatePath } from "next/cache";
+import { getContainer } from "@/lib/di/container-provider";
 import { Product } from "@/lib/db/schema";
 
 export async function getProducts(): Promise<Product[]> {
-  return await productRepository.findAll();
+  const container = getContainer();
+  return await container.productService.findAll();
 }
 
-export async function getProductById(id: number): Promise<Product | null> {
-  return await productRepository.findById(id);
+export async function getProduct(id: number): Promise<Product | null> {
+  const container = getContainer();
+  return await container.productService.findById(id);
 }
 
 export async function createProduct(
@@ -17,7 +20,10 @@ export async function createProduct(
     "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
   >
 ): Promise<Product> {
-  return await productRepository.create(data);
+  const container = getContainer();
+  const product = await container.productService.create(data);
+  revalidatePath("/admin/products");
+  return product;
 }
 
 export async function updateProduct(
@@ -29,9 +35,16 @@ export async function updateProduct(
     >
   >
 ): Promise<Product | null> {
-  return await productRepository.update(id, data);
+  const container = getContainer();
+  const product = await container.productService.update(id, data);
+  revalidatePath("/admin/products");
+  revalidatePath(`/products/${id}`);
+  return product;
 }
 
 export async function deleteProduct(id: number): Promise<boolean> {
-  return await productRepository.delete(id);
+  const container = getContainer();
+  const result = await container.productService.delete(id);
+  revalidatePath("/admin/products");
+  return result;
 }

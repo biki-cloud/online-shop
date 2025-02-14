@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
 import { ProductDetails } from "@/components/products/product-details";
-import { getProductById } from "@/app/actions/product";
+import { getProduct } from "@/app/actions/product";
 
-interface ProductPageProps {
+interface Props {
   params: {
     id: string;
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params }: Props) {
   const resolvedParams = await params;
   const id = parseInt(resolvedParams.id);
-  const product = await getProductById(id);
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
