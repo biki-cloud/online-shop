@@ -12,9 +12,11 @@ import { ProductRepository } from "@/lib/repositories/product.repository";
 import { ICartService } from "../services/interfaces/cart.service";
 import { IProductService } from "../services/interfaces/product.service";
 import { IPaymentService } from "../services/interfaces/payment.service";
+import { IOrderService } from "../services/interfaces/order.service";
 import { CartService } from "../services/cart.service";
 import { ProductService } from "../services/product.service";
 import { PaymentService } from "../services/payment.service";
+import { OrderService } from "../services/order.service";
 
 export interface DIContainer {
   db: Database;
@@ -26,6 +28,7 @@ export interface DIContainer {
   cartService: ICartService;
   productService: IProductService;
   paymentService: IPaymentService;
+  orderService: IOrderService;
 }
 
 export const createContainer = (db: Database): DIContainer => {
@@ -49,5 +52,6 @@ export const createContainer = (db: Database): DIContainer => {
       cartRepository,
       orderRepository
     ),
+    orderService: new OrderService(orderRepository),
   };
 };

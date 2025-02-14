@@ -1,70 +1,58 @@
 "use server";
 
-import { Order, OrderItem } from "@/lib/db/schema";
+import {
+  Order,
+  OrderItem,
+  CreateOrderInput,
+  UpdateOrderInput,
+  CreateOrderItemInput,
+} from "@/lib/domain/order";
 import { db } from "@/lib/db/drizzle";
 import { createContainer } from "@/lib/di/container";
 
 export async function getOrders(): Promise<Order[]> {
   const container = createContainer(db);
-  return await container.orderRepository.findAll();
+  const orders = await container.orderService.findAll();
+  return orders;
 }
 
 export async function getOrderById(id: number): Promise<Order | null> {
   const container = createContainer(db);
-  return await container.orderRepository.findById(id);
+  return await container.orderService.findById(id);
 }
 
 export async function getUserOrders(userId: number): Promise<Order[]> {
   const container = createContainer(db);
-  return await container.orderRepository.findByUserId(userId);
+  return await container.orderService.findByUserId(userId);
 }
 
-export async function createOrder(data: {
-  userId: number;
-  totalAmount: string;
-  currency: string;
-  shippingAddress?: string;
-  stripeSessionId?: string;
-  stripePaymentIntentId?: string;
-}): Promise<Order> {
+export async function createOrder(data: CreateOrderInput): Promise<Order> {
   const container = createContainer(db);
-  return await container.orderRepository.create(data);
+  return await container.orderService.create(data);
 }
 
 export async function createOrderItems(
   orderId: number,
-  items: {
-    productId: number;
-    quantity: number;
-    price: string;
-    currency: string;
-  }[]
+  items: Omit<CreateOrderItemInput, "orderId">[]
 ): Promise<OrderItem[]> {
   const container = createContainer(db);
-  return await container.orderRepository.createOrderItems(orderId, items);
+  const orderItems = await Promise.all(
+    items.map((item) =>
+      container.orderService.createOrderItem({ ...item, orderId })
+    )
+  );
+  return orderItems;
 }
 
 export async function updateOrder(
   id: number,
-  data: Partial<{
-    status: string;
-    stripeSessionId: string;
-    stripePaymentIntentId: string;
-  }>
+  data: UpdateOrderInput
 ): Promise<Order | null> {
   const container = createContainer(db);
-  return await container.orderRepository.update(id, data);
+  return await container.orderService.update(id, data);
 }
 
-export async function getOrderItems(orderId: number): Promise<
-  (OrderItem & {
-    product: {
-      id: number;
-      name: string;
-      imageUrl: string | null;
-    } | null;
-  })[]
-> {
+export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
   const container = createContainer(db);
-  return await container.orderRepository.getOrderItems(orderId);
+  return await container.orderService.getOrderItems(orderId);
 }
