@@ -1,19 +1,13 @@
 import { and, eq } from "drizzle-orm";
-import {
-  Cart,
-  CartItem,
-  Product,
-  cartItems,
-  carts,
-  products,
-} from "../db/schema";
+import { cartItems, carts, products } from "../db/schema";
 import { BaseRepository } from "./base.repository";
 import { ICartRepository } from "./interfaces/cart.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
 import { Database } from "../db/drizzle";
+import { Cart, CartItem, CreateCartInput } from "@/lib/domain/cart";
 
 export class CartRepository
-  extends BaseRepository<Cart>
+  extends BaseRepository<Cart, CreateCartInput>
   implements ICartRepository
 {
   constructor(db: Database) {
@@ -33,9 +27,7 @@ export class CartRepository
     return result[0] ?? null;
   }
 
-  async getCartItems(
-    cartId: number
-  ): Promise<(CartItem & { product: Product | null })[]> {
+  async getCartItems(cartId: number): Promise<CartItem[]> {
     return await this.db
       .select({
         id: cartItems.id,
@@ -44,7 +36,15 @@ export class CartRepository
         quantity: cartItems.quantity,
         createdAt: cartItems.createdAt,
         updatedAt: cartItems.updatedAt,
-        product: products,
+        product: {
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          currency: products.currency,
+          imageUrl: products.imageUrl,
+          stock: products.stock,
+        },
       })
       .from(cartItems)
       .leftJoin(products, eq(cartItems.productId, products.id))

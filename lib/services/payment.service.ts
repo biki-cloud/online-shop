@@ -4,7 +4,7 @@ import { stripe } from "@/lib/payments/stripe";
 import { IPaymentRepository } from "../repositories/interfaces/payment.repository";
 import { ICartRepository } from "../repositories/interfaces/cart.repository";
 import { IOrderRepository } from "../repositories/interfaces/order.repository";
-import { Cart, CartItem, Product } from "../db/schema";
+import { Cart, CartItem } from "@/lib/domain/cart";
 import { calculateOrderAmount } from "../utils";
 
 function isValidUrl(url: string): boolean {
@@ -64,7 +64,7 @@ export class PaymentService {
   }: {
     userId: number;
     cart: Cart;
-    cartItems: (CartItem & { product: Product | null })[];
+    cartItems: CartItem[];
   }): Promise<void> {
     if (!cartItems.length) {
       redirect("/cart");

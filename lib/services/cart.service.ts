@@ -1,4 +1,4 @@
-import { Cart, CartItem, Product } from "@/lib/db/schema";
+import { Cart, CartItem } from "@/lib/domain/cart";
 import { ICartRepository } from "../repositories/interfaces/cart.repository";
 import { ICartService } from "./interfaces/cart.service";
 
@@ -9,9 +9,7 @@ export class CartService implements ICartService {
     return await this.cartRepository.findActiveCartByUserId(userId);
   }
 
-  async getCartItems(
-    cartId: number
-  ): Promise<(CartItem & { product: Product | null })[]> {
+  async getCartItems(cartId: number): Promise<CartItem[]> {
     return await this.cartRepository.getCartItems(cartId);
   }
 

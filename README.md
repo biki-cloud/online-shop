@@ -53,7 +53,10 @@ pnpm db:seed
 
 This will create the following user and team:
 
-- User: `test@test.com`
+- User: `test@example.com`
+- Password: `password123`
+
+- admin User: `admin@example.com`
 - Password: `admin123`
 
 You can, of course, create new users as well through `/sign-up`.

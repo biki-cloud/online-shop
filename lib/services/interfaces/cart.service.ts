@@ -1,10 +1,8 @@
-import { Cart, CartItem, Product } from "@/lib/db/schema";
+import { Cart, CartItem } from "@/lib/domain/cart";
 
 export interface ICartService {
   findActiveCart(userId: number): Promise<Cart | null>;
-  getCartItems(
-    cartId: number
-  ): Promise<(CartItem & { product: Product | null })[]>;
+  getCartItems(cartId: number): Promise<CartItem[]>;
   addToCart(
     userId: number,
     productId: number,
