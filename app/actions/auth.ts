@@ -9,10 +9,9 @@ import {
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
 import { hashPassword, setSession } from "@/lib/auth/session";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
+import { getContainer } from "@/lib/di/container-provider";
 
-const container = createContainer(db);
+const container = getContainer();
 const userRepository = container.userRepository;
 
 const signInSchema = z.object({
