@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
+import { getContainer } from "@/lib/di/container-provider";
 import type Stripe from "stripe";
 
 export async function checkoutAction(formData: FormData) {
@@ -12,12 +11,12 @@ export async function checkoutAction(formData: FormData) {
     redirect("/sign-in");
   }
 
-  const container = createContainer(db);
+  const container = getContainer();
   await container.paymentService.processCheckout(session.user.id);
 }
 
 export async function handleStripeWebhook(session: Stripe.Checkout.Session) {
-  const container = createContainer(db);
+  const container = getContainer();
   if (session.payment_status === "paid") {
     await container.paymentService.handlePaymentSuccess(session);
   } else if (session.payment_status === "unpaid") {
@@ -26,11 +25,11 @@ export async function handleStripeWebhook(session: Stripe.Checkout.Session) {
 }
 
 export async function getStripePrices() {
-  const container = createContainer(db);
+  const container = getContainer();
   return await container.paymentService.getStripePrices();
 }
 
 export async function getStripeProducts() {
-  const container = createContainer(db);
+  const container = getContainer();
   return await container.paymentService.getStripeProducts();
 }
