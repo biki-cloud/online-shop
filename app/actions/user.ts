@@ -1,10 +1,10 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import type { User, CreateUserInput, UpdateUserInput } from "@/lib/domain/user";
+import type { User, CreateUserInput, UpdateUserInput } from "@/lib/core/domain/user";
 import { getContainer } from "@/lib/di/container";
-import type { IUserService } from "@/lib/services/interfaces/user.service";
-import { getSession } from "@/lib/auth/session";
+import type { IUserService } from "@/lib/core/services/interfaces/user.service";
+import { getSession } from "@/lib/infrastructure/auth/session";
 
 function getUserService() {
   const container = getContainer();

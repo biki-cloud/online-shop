@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { signIn, signUp } from "@/app/actions/auth";
-import { ActionState } from "@/lib/auth/middleware";
+import { ActionState } from "@/lib/infrastructure/auth/middleware";
 import Link from "next/link";
 
 interface AuthFormProps {

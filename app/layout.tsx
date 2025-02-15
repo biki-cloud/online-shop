@@ -2,7 +2,7 @@ import "./globals.css";
 import "reflect-metadata";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-import { UserProvider } from "@/lib/auth";
+import { UserProvider } from "@/lib/infrastructure/auth";
 import { getCurrentUser } from "@/app/actions/user";
 import { Nav } from "@/components/layout/nav";
 

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getSession } from "@/lib/infrastructure/auth/session";
 import { getOrderById, getOrderItems } from "@/app/actions/order";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/shared/utils";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;

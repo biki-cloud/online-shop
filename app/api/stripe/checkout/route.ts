@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { container } from "@/lib/di/container";
-import type { IPaymentService } from "@/lib/services/interfaces/payment.service";
+import type { IPaymentService } from "@/lib/core/services/interfaces/payment.service";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

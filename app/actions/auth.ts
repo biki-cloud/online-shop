@@ -3,14 +3,14 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { createCheckoutSession } from "@/lib/payments/stripe";
+import { createCheckoutSession } from "@/lib/infrastructure/payments/stripe";
 import {
   validatedAction,
   validatedActionWithUser,
-} from "@/lib/auth/middleware";
-import { hashPassword, setSession } from "@/lib/auth/session";
+} from "@/lib/infrastructure/auth/middleware";
+import { hashPassword, setSession } from "@/lib/infrastructure/auth/session";
 import { getContainer } from "@/lib/di/container";
-import type { IUserService } from "@/lib/services/interfaces/user.service";
+import type { IUserService } from "@/lib/core/services/interfaces/user.service";
 
 function getUserService() {
   const container = getContainer();

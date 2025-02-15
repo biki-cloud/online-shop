@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CartItem, Product } from "@/lib/db/schema";
-import { formatPrice } from "@/lib/utils";
+import { CartItem, Product } from "@/lib/infrastructure/db/schema";
+import { formatPrice } from "@/lib/shared/utils";
 import { useState } from "react";
 import { updateCartItemQuantity, removeFromCart } from "@/app/actions/cart";
 import { Loader2, Trash2 } from "lucide-react";

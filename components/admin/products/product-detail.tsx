@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/db/schema";
+import { Product } from "@/lib/infrastructure/db/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";

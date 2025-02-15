@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Product } from "@/lib/db/schema";
+import { Product } from "@/lib/infrastructure/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { updateProduct } from "@/app/actions/product";
 import { toast } from "sonner";
 import Image from "next/image";
-import { uploadFile, deleteFile } from "@/lib/storage";
+import { uploadFile, deleteFile } from "@/lib/infrastructure/storage/storage";
 
 interface AdminProductFormProps {
   product: Product;

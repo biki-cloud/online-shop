@@ -6,9 +6,9 @@ import {
   CreateOrderInput,
   UpdateOrderInput,
   CreateOrderItemInput,
-} from "@/lib/domain/order";
+} from "@/lib/core/domain/order";
 import { getContainer } from "@/lib/di/container";
-import { IOrderService } from "@/lib/services/interfaces/order.service";
+import { IOrderService } from "@/lib/core/services/interfaces/order.service";
 
 function getOrderService() {
   const container = getContainer();

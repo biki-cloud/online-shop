@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getProduct } from "@/app/actions/product";
-import { checkAdmin } from "@/lib/auth/middleware";
+import { checkAdmin } from "@/lib/infrastructure/auth/middleware";
 import { AdminProductForm } from "@/components/admin/products/product-form";
 
 interface Props {

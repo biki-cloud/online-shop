@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/app/actions/user";
 import { getContainer } from "@/lib/di/container";
-import { ICartService } from "@/lib/services/interfaces/cart.service";
+import { ICartService } from "@/lib/core/services/interfaces/cart.service";
 
 function getCartService() {
   const container = getContainer();

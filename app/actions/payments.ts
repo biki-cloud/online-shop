@@ -1,10 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getSession } from "@/lib/infrastructure/auth/session";
 import { getContainer } from "@/lib/di/container";
 import type Stripe from "stripe";
-import { IPaymentService } from "@/lib/services/interfaces/payment.service";
+import { IPaymentService } from "@/lib/core/services/interfaces/payment.service";
 
 function getPaymentService() {
   const container = getContainer();

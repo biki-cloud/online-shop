@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { getContainer } from "@/lib/di/container";
-import type { IProductService } from "@/lib/services/interfaces/product.service";
+import type { IProductService } from "@/lib/core/services/interfaces/product.service";
 import type {
   Product,
   CreateProductInput,
   UpdateProductInput,
-} from "@/lib/domain/product";
+} from "@/lib/core/domain/product";
 
 function getProductService() {
   const container = getContainer();

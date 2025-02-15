@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/db/schema";
+import { Product } from "@/lib/infrastructure/db/schema";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/shared/utils";
 import { useState } from "react";
 import { addToCart } from "@/app/actions/cart";
 import { Loader2 } from "lucide-react";
