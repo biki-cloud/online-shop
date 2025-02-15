@@ -1,4 +1,4 @@
-export const stripe = {
+const mockStripe = {
   checkout: {
     sessions: {
       create: jest.fn().mockResolvedValue({
@@ -13,6 +13,16 @@ export const stripe = {
     },
   },
   products: {
+    list: jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: "prod_123",
+          name: "Test Product",
+          description: "Test Description",
+          default_price: "price_123",
+        },
+      ],
+    }),
     create: jest.fn().mockResolvedValue({
       id: "prod_123",
     }),
@@ -21,6 +31,20 @@ export const stripe = {
     }),
   },
   prices: {
+    list: jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: "price_123",
+          product: "prod_123",
+          unit_amount: 1000,
+          currency: "jpy",
+          recurring: {
+            interval: "month",
+            trial_period_days: 14,
+          },
+        },
+      ],
+    }),
     create: jest.fn().mockResolvedValue({
       id: "price_123",
     }),
@@ -29,3 +53,7 @@ export const stripe = {
     }),
   },
 };
+
+const Stripe = jest.fn(() => mockStripe);
+
+export default Stripe;

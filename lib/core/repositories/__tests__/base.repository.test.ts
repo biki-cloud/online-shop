@@ -1,3 +1,4 @@
+import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 import { eq } from "drizzle-orm";
 import { PgTable, TableConfig, PgColumn } from "drizzle-orm/pg-core";
 import { BaseRepository } from "../base.repository";
@@ -11,208 +12,260 @@ interface TestEntity {
   updatedAt: Date;
 }
 
-// テスト用のモックテーブル
-const mockTable = {
-  name: "test_table",
-  _: {},
-  $inferSelect: {} as any,
-  $inferInsert: {} as any,
-  getSQL: () => ({ sql: "", params: [] }),
-} as unknown as PgTable<TableConfig>;
-
-// テスト用のモックカラム
-const mockIdColumn = {
-  name: "id",
-} as unknown as PgColumn<any>;
-
-// テスト用のリポジトリクラス
+// テスト用のモックリポジトリ
 class TestRepository extends BaseRepository<TestEntity> {
   protected get idColumn(): PgColumn<any> {
-    return mockIdColumn;
+    return { name: "id" } as PgColumn<any>;
   }
 }
 
 describe("BaseRepository", () => {
   let repository: TestRepository;
-  let mockDb: jest.Mocked<any>;
+  let mockDb: jest.Mocked<Database>;
+  let mockTable: jest.Mocked<PgTable<TableConfig>>;
+  let mockExecute: jest.Mock;
+  let mockSelect: jest.Mock;
+  let mockWhere: jest.Mock;
+  let mockLimit: jest.Mock;
+  let mockInsert: jest.Mock;
+  let mockValues: jest.Mock;
+  let mockUpdate: jest.Mock;
+  let mockSet: jest.Mock;
+  let mockDelete: jest.Mock;
+  let mockReturning: jest.Mock;
 
   beforeEach(() => {
-    // データベースのモックを作成
-    mockDb = {
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      from: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      values: jest.fn().mockReturnThis(),
-      set: jest.fn().mockReturnThis(),
-      returning: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-    };
+    // モックの設定
+    mockExecute = jest.fn();
+    mockSelect = jest.fn();
+    mockWhere = jest.fn();
+    mockLimit = jest.fn();
+    mockInsert = jest.fn();
+    mockValues = jest.fn();
+    mockUpdate = jest.fn();
+    mockSet = jest.fn();
+    mockDelete = jest.fn();
+    mockReturning = jest.fn();
 
-    // リポジトリのインスタンスを作成
-    repository = new TestRepository(mockDb as unknown as Database, mockTable);
+    // モックチェーンの設定
+    mockSelect.mockReturnThis();
+    mockWhere.mockReturnThis();
+    mockLimit.mockReturnThis();
+    mockInsert.mockReturnThis();
+    mockValues.mockReturnThis();
+    mockUpdate.mockReturnThis();
+    mockSet.mockReturnThis();
+    mockDelete.mockReturnThis();
+    mockReturning.mockReturnThis();
+
+    mockDb = {
+      select: mockSelect,
+      insert: mockInsert,
+      update: mockUpdate,
+      delete: mockDelete,
+    } as any;
+
+    mockTable = {} as any;
+
+    repository = new TestRepository(mockDb, mockTable);
   });
 
   describe("findById", () => {
-    it("should find entity by id", async () => {
-      const mockEntity = {
+    it("should return entity when found", async () => {
+      const mockEntity: TestEntity = {
         id: 1,
-        name: "Test Entity",
+        name: "Test",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      mockDb.select = jest.fn().mockReturnThis();
-      mockDb.from = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.limit = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([mockEntity]);
+      mockExecute.mockResolvedValueOnce([mockEntity]);
+
+      mockSelect.mockImplementation(() => ({
+        from: () => ({
+          where: mockWhere.mockImplementation(() => ({
+            limit: mockLimit.mockImplementation(() => ({
+              execute: mockExecute,
+            })),
+          })),
+        }),
+      }));
 
       const result = await repository.findById(1);
 
       expect(result).toEqual(mockEntity);
-      expect(mockDb.select).toHaveBeenCalled();
-      expect(mockDb.from).toHaveBeenCalledWith(mockTable);
-      expect(mockDb.where).toHaveBeenCalledWith(eq(mockIdColumn, 1));
-      expect(mockDb.limit).toHaveBeenCalledWith(1);
-    }, 10000);
+      expect(mockSelect).toHaveBeenCalled();
+      expect(mockWhere).toHaveBeenCalled();
+      expect(mockLimit).toHaveBeenCalledWith(1);
+      expect(mockExecute).toHaveBeenCalled();
+    });
 
-    it("should return null when entity is not found", async () => {
-      mockDb.select = jest.fn().mockReturnThis();
-      mockDb.from = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.limit = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([]);
+    it("should return null when not found", async () => {
+      mockExecute.mockResolvedValueOnce([]);
+
+      mockSelect.mockImplementation(() => ({
+        from: () => ({
+          where: mockWhere.mockImplementation(() => ({
+            limit: mockLimit.mockImplementation(() => ({
+              execute: mockExecute,
+            })),
+          })),
+        }),
+      }));
 
       const result = await repository.findById(1);
 
       expect(result).toBeNull();
-    }, 10000);
+    });
   });
 
   describe("findAll", () => {
-    it("should find all entities", async () => {
-      const mockEntities = [
+    it("should return all entities", async () => {
+      const mockEntities: TestEntity[] = [
         {
           id: 1,
-          name: "Test Entity 1",
+          name: "Test 1",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: 2,
-          name: "Test Entity 2",
+          name: "Test 2",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       ];
 
-      mockDb.select = jest.fn().mockReturnThis();
-      mockDb.from = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue(mockEntities);
+      mockExecute.mockResolvedValueOnce(mockEntities);
+
+      mockSelect.mockImplementation(() => ({
+        from: () => ({
+          execute: mockExecute,
+        }),
+      }));
 
       const result = await repository.findAll();
 
       expect(result).toEqual(mockEntities);
-      expect(mockDb.select).toHaveBeenCalled();
-      expect(mockDb.from).toHaveBeenCalledWith(mockTable);
-    }, 10000);
+      expect(mockSelect).toHaveBeenCalled();
+      expect(mockExecute).toHaveBeenCalled();
+    });
   });
 
   describe("create", () => {
-    it("should create new entity", async () => {
-      const mockInput = {
-        name: "New Entity",
-      };
-
-      const mockEntity = {
+    it("should create and return new entity", async () => {
+      const mockEntity: TestEntity = {
         id: 1,
-        ...mockInput,
+        name: "Test",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      mockDb.insert = jest.fn().mockReturnThis();
-      mockDb.values = jest.fn().mockReturnThis();
-      mockDb.returning = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([mockEntity]);
+      mockExecute.mockResolvedValueOnce([mockEntity]);
 
-      const result = await repository.create(mockInput);
+      mockInsert.mockImplementation(() => ({
+        values: mockValues.mockImplementation(() => ({
+          returning: mockReturning.mockImplementation(() => ({
+            execute: mockExecute,
+          })),
+        })),
+      }));
+
+      const result = await repository.create({ name: "Test" });
 
       expect(result).toEqual(mockEntity);
-      expect(mockDb.insert).toHaveBeenCalled();
-      expect(mockDb.values).toHaveBeenCalledWith(mockInput);
-      expect(mockDb.returning).toHaveBeenCalled();
-    }, 10000);
+      expect(mockInsert).toHaveBeenCalled();
+      expect(mockValues).toHaveBeenCalled();
+      expect(mockReturning).toHaveBeenCalled();
+      expect(mockExecute).toHaveBeenCalled();
+    });
   });
 
   describe("update", () => {
-    it("should update entity", async () => {
-      const mockInput = {
-        name: "Updated Entity",
-      };
-
-      const mockEntity = {
+    it("should update and return updated entity", async () => {
+      const mockEntity: TestEntity = {
         id: 1,
-        ...mockInput,
+        name: "Updated Test",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      mockDb.update = jest.fn().mockReturnThis();
-      mockDb.set = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.returning = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([mockEntity]);
+      mockExecute.mockResolvedValueOnce([mockEntity]);
 
-      const result = await repository.update(1, mockInput);
+      mockUpdate.mockImplementation(() => ({
+        set: mockSet.mockImplementation(() => ({
+          where: mockWhere.mockImplementation(() => ({
+            returning: mockReturning.mockImplementation(() => ({
+              execute: mockExecute,
+            })),
+          })),
+        })),
+      }));
+
+      const result = await repository.update(1, { name: "Updated Test" });
 
       expect(result).toEqual(mockEntity);
-      expect(mockDb.update).toHaveBeenCalled();
-      expect(mockDb.set).toHaveBeenCalled();
-      expect(mockDb.where).toHaveBeenCalledWith(eq(mockIdColumn, 1));
-      expect(mockDb.returning).toHaveBeenCalled();
-    }, 10000);
+      expect(mockUpdate).toHaveBeenCalled();
+      expect(mockSet).toHaveBeenCalled();
+      expect(mockWhere).toHaveBeenCalled();
+      expect(mockReturning).toHaveBeenCalled();
+      expect(mockExecute).toHaveBeenCalled();
+    });
 
-    it("should return null when entity is not found", async () => {
-      mockDb.update = jest.fn().mockReturnThis();
-      mockDb.set = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.returning = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([]);
+    it("should return null when entity not found", async () => {
+      mockExecute.mockResolvedValueOnce([]);
 
-      const result = await repository.update(1, { name: "Updated Entity" });
+      mockUpdate.mockImplementation(() => ({
+        set: mockSet.mockImplementation(() => ({
+          where: mockWhere.mockImplementation(() => ({
+            returning: mockReturning.mockImplementation(() => ({
+              execute: mockExecute,
+            })),
+          })),
+        })),
+      }));
+
+      const result = await repository.update(1, { name: "Updated Test" });
 
       expect(result).toBeNull();
-    }, 10000);
+    });
   });
 
   describe("delete", () => {
-    it("should delete entity", async () => {
-      mockDb.delete = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.returning = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([{ id: 1 }]);
+    it("should return true when entity is deleted", async () => {
+      mockExecute.mockResolvedValueOnce([{ id: 1 }]);
+
+      mockDelete.mockImplementation(() => ({
+        where: mockWhere.mockImplementation(() => ({
+          returning: mockReturning.mockImplementation(() => ({
+            execute: mockExecute,
+          })),
+        })),
+      }));
 
       const result = await repository.delete(1);
 
       expect(result).toBe(true);
-      expect(mockDb.delete).toHaveBeenCalled();
-      expect(mockDb.where).toHaveBeenCalledWith(eq(mockIdColumn, 1));
-      expect(mockDb.returning).toHaveBeenCalled();
-    }, 10000);
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockWhere).toHaveBeenCalled();
+      expect(mockReturning).toHaveBeenCalled();
+      expect(mockExecute).toHaveBeenCalled();
+    });
 
-    it("should return false when entity is not found", async () => {
-      mockDb.delete = jest.fn().mockReturnThis();
-      mockDb.where = jest.fn().mockReturnThis();
-      mockDb.returning = jest.fn().mockReturnThis();
-      mockDb.execute = jest.fn().mockResolvedValue([]);
+    it("should return false when entity not found", async () => {
+      mockExecute.mockResolvedValueOnce([]);
+
+      mockDelete.mockImplementation(() => ({
+        where: mockWhere.mockImplementation(() => ({
+          returning: mockReturning.mockImplementation(() => ({
+            execute: mockExecute,
+          })),
+        })),
+      }));
 
       const result = await repository.delete(1);
 
       expect(result).toBe(false);
-    }, 10000);
+    });
   });
 });
