@@ -163,6 +163,78 @@ describe("PaymentRepository", () => {
       );
     });
 
+    it("should handle external URLs in product images", async () => {
+      const mockOrder = {
+        id: 1,
+        userId: 1,
+        status: "pending",
+        totalAmount: "1000",
+        currency: "jpy",
+        stripeSessionId: null,
+        stripePaymentIntentId: null,
+        shippingAddress: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockOrderItems = [
+        {
+          id: 1,
+          orderId: 1,
+          productId: 1,
+          quantity: 2,
+          price: "1000",
+          currency: "jpy",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          product: {
+            id: 1,
+            name: "Test Product",
+            description: "Test Description",
+            imageUrl: "https://external.com/image.jpg",
+          },
+        },
+      ];
+
+      const mockSession = {
+        id: "session_123",
+        url: "https://example.com",
+      };
+
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnThis();
+      db.leftJoin.mockReturnThis();
+      db.execute.mockResolvedValueOnce([mockOrder]);
+      db.execute.mockResolvedValueOnce(mockOrderItems);
+
+      (stripe.checkout.sessions.create as jest.Mock).mockResolvedValue(
+        mockSession
+      );
+
+      const result = await repository.createCheckoutSession({
+        userId: 1,
+        orderId: 1,
+      });
+
+      expect(result).toEqual(mockSession);
+      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          line_items: expect.arrayContaining([
+            expect.objectContaining({
+              price_data: expect.objectContaining({
+                product_data: expect.objectContaining({
+                  images: ["https://external.com/image.jpg"],
+                }),
+              }),
+            }),
+          ]),
+        })
+      );
+    });
+
     it("should throw error when order not found", async () => {
       const db = mockDb as any;
       db.select.mockReturnThis();
@@ -208,6 +280,105 @@ describe("PaymentRepository", () => {
         })
       ).rejects.toThrow("注文アイテムが見つかりません。");
     });
+
+    it("should throw error when product information is missing", async () => {
+      const mockOrder = {
+        id: 1,
+        userId: 1,
+        status: "pending",
+        totalAmount: "1000",
+        currency: "jpy",
+        stripeSessionId: null,
+        stripePaymentIntentId: null,
+        shippingAddress: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockOrderItems = [
+        {
+          id: 1,
+          orderId: 1,
+          productId: 1,
+          quantity: 2,
+          price: "1000",
+          currency: "jpy",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          product: null,
+        },
+      ];
+
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnThis();
+      db.leftJoin.mockReturnThis();
+      db.execute.mockResolvedValueOnce([mockOrder]);
+      db.execute.mockResolvedValueOnce(mockOrderItems);
+
+      await expect(
+        repository.createCheckoutSession({
+          userId: 1,
+          orderId: 1,
+        })
+      ).rejects.toThrow("商品情報が見つかりません。");
+    });
+
+    it("should throw error when Stripe session creation fails", async () => {
+      const mockOrder = {
+        id: 1,
+        userId: 1,
+        status: "pending",
+        totalAmount: "1000",
+        currency: "jpy",
+        stripeSessionId: null,
+        stripePaymentIntentId: null,
+        shippingAddress: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockOrderItems = [
+        {
+          id: 1,
+          orderId: 1,
+          productId: 1,
+          quantity: 2,
+          price: "1000",
+          currency: "jpy",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          product: {
+            id: 1,
+            name: "Test Product",
+            description: "Test Description",
+            imageUrl: "test.jpg",
+          },
+        },
+      ];
+
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnThis();
+      db.leftJoin.mockReturnThis();
+      db.execute.mockResolvedValueOnce([mockOrder]);
+      db.execute.mockResolvedValueOnce(mockOrderItems);
+
+      (stripe.checkout.sessions.create as jest.Mock).mockRejectedValue(
+        new Error("Stripe error")
+      );
+
+      await expect(
+        repository.createCheckoutSession({
+          userId: 1,
+          orderId: 1,
+        })
+      ).rejects.toThrow("決済セッションの作成に失敗しました。");
+    });
   });
 
   describe("handlePaymentSuccess", () => {
@@ -249,6 +420,16 @@ describe("PaymentRepository", () => {
         repository.handlePaymentSuccess("session_123")
       ).rejects.toThrow("注文IDが見つかりません。");
     });
+
+    it("should throw error when Stripe session retrieval fails", async () => {
+      (stripe.checkout.sessions.retrieve as jest.Mock).mockRejectedValue(
+        new Error("Stripe error")
+      );
+
+      await expect(
+        repository.handlePaymentSuccess("session_123")
+      ).rejects.toThrow();
+    });
   });
 
   describe("handlePaymentFailure", () => {
@@ -288,6 +469,16 @@ describe("PaymentRepository", () => {
         repository.handlePaymentFailure("session_123")
       ).rejects.toThrow("注文IDが見つかりません。");
     });
+
+    it("should throw error when Stripe session retrieval fails", async () => {
+      (stripe.checkout.sessions.retrieve as jest.Mock).mockRejectedValue(
+        new Error("Stripe error")
+      );
+
+      await expect(
+        repository.handlePaymentFailure("session_123")
+      ).rejects.toThrow();
+    });
   });
 
   describe("getStripePrices", () => {
@@ -321,6 +512,14 @@ describe("PaymentRepository", () => {
         },
       ]);
     });
+
+    it("should handle Stripe prices list error", async () => {
+      (stripe.prices.list as jest.Mock).mockRejectedValue(
+        new Error("Stripe error")
+      );
+
+      await expect(repository.getStripePrices()).rejects.toThrow();
+    });
   });
 
   describe("getStripeProducts", () => {
@@ -332,6 +531,42 @@ describe("PaymentRepository", () => {
             name: "Test Product",
             description: "Test Description",
             default_price: "price_1",
+          },
+        ],
+      };
+      (stripe.products.list as jest.Mock).mockResolvedValue(mockProducts);
+
+      const result = await repository.getStripeProducts();
+
+      expect(result).toEqual([
+        {
+          id: "prod_1",
+          name: "Test Product",
+          description: "Test Description",
+          defaultPriceId: "price_1",
+        },
+      ]);
+    });
+
+    it("should handle Stripe products list error", async () => {
+      (stripe.products.list as jest.Mock).mockRejectedValue(
+        new Error("Stripe error")
+      );
+
+      await expect(repository.getStripeProducts()).rejects.toThrow();
+    });
+
+    it("should handle products with expanded default_price", async () => {
+      const mockProducts = {
+        data: [
+          {
+            id: "prod_1",
+            name: "Test Product",
+            description: "Test Description",
+            default_price: {
+              id: "price_1",
+              unit_amount: 1000,
+            },
           },
         ],
       };
