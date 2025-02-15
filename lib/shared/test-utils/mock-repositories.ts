@@ -423,4 +423,21 @@ export class MockUserRepository {
   async delete(id: number): Promise<boolean> {
     return true;
   }
+
+  async verifyPassword(email: string, password: string): Promise<User | null> {
+    if (email === "test@example.com" && password === "password123") {
+      const now = new Date("2025-02-15T21:41:37.040Z");
+      return {
+        id: 1,
+        email,
+        name: "Test User",
+        passwordHash: "hashedPassword",
+        role: "user",
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+    }
+    return null;
+  }
 }
