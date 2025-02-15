@@ -44,6 +44,15 @@ export class OrderRepository
       .orderBy(orders.createdAt);
   }
 
+  async findByStripeSessionId(sessionId: string): Promise<Order | null> {
+    const result = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.stripeSessionId, sessionId))
+      .limit(1);
+    return result[0] ?? null;
+  }
+
   async create(data: {
     userId: number;
     totalAmount: string;
@@ -95,7 +104,7 @@ export class OrderRepository
       stripePaymentIntentId: string;
     }>
   ): Promise<Order | null> {
-    const [updatedOrder] = await this.db
+    const result = await this.db
       .update(orders)
       .set({
         ...data,
@@ -103,8 +112,7 @@ export class OrderRepository
       })
       .where(eq(orders.id, id))
       .returning();
-
-    return updatedOrder ?? null;
+    return result[0] ?? null;
   }
 
   async getOrderItems(orderId: number): Promise<

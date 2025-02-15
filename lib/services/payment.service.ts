@@ -7,7 +7,7 @@ import type { IPaymentRepository } from "../repositories/interfaces/payment.repo
 import type { ICartRepository } from "../repositories/interfaces/cart.repository";
 import type { IOrderRepository } from "../repositories/interfaces/order.repository";
 import type { Cart, CartItem } from "@/lib/domain/cart";
-import { calculateOrderAmount } from "../utils";
+import type { IPaymentService } from "./interfaces/payment.service";
 
 function isValidUrl(url: string): boolean {
   try {
@@ -35,7 +35,7 @@ function getFullImageUrl(imageUrl: string | null): string | undefined {
 }
 
 @injectable()
-export class PaymentService {
+export class PaymentService implements IPaymentService {
   constructor(
     @inject("PaymentRepository")
     private readonly paymentRepository: IPaymentRepository,
@@ -48,32 +48,12 @@ export class PaymentService {
   async processCheckout(userId: number): Promise<void> {
     const cart = await this.cartRepository.findActiveCartByUserId(userId);
     if (!cart) {
-      redirect("/cart");
+      throw new Error("カートが見つかりません。");
     }
 
     const cartItems = await this.cartRepository.getCartItems(cart.id);
-    if (!cartItems || cartItems.length === 0) {
-      redirect("/cart");
-    }
-
-    await this.createCheckoutSession({
-      userId,
-      cart,
-      cartItems,
-    });
-  }
-
-  private async createCheckoutSession({
-    userId,
-    cart,
-    cartItems,
-  }: {
-    userId: number;
-    cart: Cart;
-    cartItems: CartItem[];
-  }): Promise<void> {
     if (!cartItems.length) {
-      redirect("/cart");
+      throw new Error("カートが空です。");
     }
 
     const subtotal = cartItems.reduce(
@@ -81,35 +61,14 @@ export class PaymentService {
       0
     );
 
-    const { total } = calculateOrderAmount(subtotal);
-
-    const lineItems = cartItems
-      .filter((item) => item.product !== null)
-      .map((item) => {
-        const priceWithTax = Math.round(Number(item.product!.price) * 1.1);
-        const fullImageUrl = getFullImageUrl(item.product!.imageUrl);
-
-        return {
-          price_data: {
-            currency: item.product!.currency.toLowerCase(),
-            product_data: {
-              name: item.product!.name,
-              description: item.product!.description || undefined,
-              images: fullImageUrl ? [fullImageUrl] : undefined,
-            },
-            unit_amount: priceWithTax,
-          },
-          quantity: item.quantity,
-        };
-      });
-
     const order = await this.orderRepository.create({
       userId,
-      totalAmount: total.toString(),
-      currency: "JPY",
+      totalAmount: subtotal.toString(),
+      currency: "jpy",
       status: "pending",
     });
 
+    // 注文アイテムを作成
     await this.orderRepository.createOrderItems(
       order.id,
       cartItems.map((item) => ({
@@ -120,23 +79,45 @@ export class PaymentService {
       }))
     );
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      mode: "payment",
-      success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.BASE_URL}/cart`,
-      metadata: {
-        orderId: order.id.toString(),
-      },
+    const sessionId = await this.paymentRepository.createCheckoutSession({
+      userId,
+      orderId: order.id,
     });
+
+    if (!sessionId) {
+      throw new Error("チェックアウトセッションの作成に失敗しました。");
+    }
 
     await this.orderRepository.update(order.id, {
-      status: "pending",
-      stripeSessionId: session.id,
+      stripeSessionId: sessionId,
     });
 
-    redirect(session.url!);
+    // Stripeのチェックアウトセッションを取得
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session.url) {
+      throw new Error("チェックアウトURLの取得に失敗しました。");
+    }
+
+    // Stripeのチェックアウトページにリダイレクト
+    redirect(session.url);
+  }
+
+  async handleCheckoutSession(
+    sessionId: string
+  ): Promise<{ redirectUrl: string }> {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const order = await this.orderRepository.findByStripeSessionId(sessionId);
+
+    if (!order) {
+      throw new Error("注文が見つかりません。");
+    }
+
+    if (session.payment_status === "paid") {
+      await this.handlePaymentSuccess(session);
+      return { redirectUrl: `/orders/${order.id}` };
+    }
+
+    return { redirectUrl: `/orders/${order.id}` };
   }
 
   async handlePaymentSuccess(session: Stripe.Checkout.Session): Promise<void> {
@@ -149,6 +130,13 @@ export class PaymentService {
       status: "paid",
       stripePaymentIntentId: session.payment_intent as string,
     });
+
+    const order = await this.orderRepository.findById(orderId);
+    if (!order) {
+      throw new Error("注文が見つかりません。");
+    }
+
+    await this.cartRepository.clearCart(order.userId);
   }
 
   async handlePaymentFailure(session: Stripe.Checkout.Session): Promise<void> {
@@ -163,37 +151,10 @@ export class PaymentService {
   }
 
   async getStripePrices() {
-    const prices = await stripe.prices.list({
-      expand: ["data.product"],
-      active: true,
-      type: "recurring",
-    });
-
-    return prices.data.map((price) => ({
-      id: price.id,
-      productId:
-        typeof price.product === "string" ? price.product : price.product.id,
-      unitAmount: price.unit_amount,
-      currency: price.currency,
-      interval: price.recurring?.interval,
-      trialPeriodDays: price.recurring?.trial_period_days,
-    }));
+    return await this.paymentRepository.getStripePrices();
   }
 
   async getStripeProducts() {
-    const products = await stripe.products.list({
-      active: true,
-      expand: ["data.default_price"],
-    });
-
-    return products.data.map((product) => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      defaultPriceId:
-        typeof product.default_price === "string"
-          ? product.default_price
-          : product.default_price?.id,
-    }));
+    return await this.paymentRepository.getStripeProducts();
   }
 }

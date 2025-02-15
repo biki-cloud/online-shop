@@ -6,4 +6,5 @@ export interface IPaymentService {
   handlePaymentFailure(session: Stripe.Checkout.Session): Promise<void>;
   getStripePrices(): Promise<Partial<Stripe.Price>[]>;
   getStripeProducts(): Promise<Partial<Stripe.Product>[]>;
+  handleCheckoutSession(sessionId: string): Promise<{ redirectUrl: string }>;
 }
