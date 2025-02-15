@@ -9,31 +9,6 @@ import type { IOrderRepository } from "../repositories/interfaces/order.reposito
 import type { Cart, CartItem } from "@/lib/core/domain/cart";
 import type { IPaymentService } from "./interfaces/payment.service";
 
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function getFullImageUrl(imageUrl: string | null): string | undefined {
-  if (!imageUrl) return undefined;
-
-  // 既に完全なURLの場合はそのまま返す
-  if (isValidUrl(imageUrl)) {
-    return imageUrl;
-  }
-
-  // 相対パスの場合は、BASE_URLと組み合わせて完全なURLを生成
-  const baseUrl = process.env.BASE_URL?.replace(/\/$/, "");
-  if (!baseUrl) return undefined;
-
-  const fullUrl = `${baseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
-  return isValidUrl(fullUrl) ? fullUrl : undefined;
-}
-
 @injectable()
 export class PaymentService implements IPaymentService {
   constructor(
@@ -44,6 +19,33 @@ export class PaymentService implements IPaymentService {
     @inject("OrderRepository")
     private readonly orderRepository: IOrderRepository
   ) {}
+
+  private static isValidUrl(url: string): boolean {
+    try {
+      const parsedUrl = new URL(url);
+      return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
+  private static getFullImageUrl(imageUrl: string | null): string | undefined {
+    if (!imageUrl) return undefined;
+
+    // 既に完全なURLの場合はそのまま返す
+    if (PaymentService.isValidUrl(imageUrl)) {
+      return imageUrl;
+    }
+
+    // 相対パスの場合は、BASE_URLと組み合わせて完全なURLを生成
+    const baseUrl = process.env.BASE_URL?.replace(/\/$/, "");
+    if (!baseUrl) return undefined;
+
+    const fullUrl = `${baseUrl}${
+      imageUrl.startsWith("/") ? "" : "/"
+    }${imageUrl}`;
+    return PaymentService.isValidUrl(fullUrl) ? fullUrl : undefined;
+  }
 
   async processCheckout(userId: number): Promise<void> {
     const cart = await this.cartRepository.findActiveCartByUserId(userId);
