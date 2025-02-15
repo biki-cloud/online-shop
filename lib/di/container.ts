@@ -1,28 +1,33 @@
 import "reflect-metadata";
 import { container } from "tsyringe";
-import { Database } from "@/lib/db/drizzle";
-import { ICartRepository } from "@/lib/repositories/interfaces/cart.repository";
-import { IOrderRepository } from "@/lib/repositories/interfaces/order.repository";
-import { IPaymentRepository } from "@/lib/repositories/interfaces/payment.repository";
-import { IUserRepository } from "@/lib/repositories/interfaces/user.repository";
-import { IProductRepository } from "@/lib/repositories/interfaces/product.repository";
+import type { Database } from "@/lib/db/drizzle";
+import type { ICartRepository } from "@/lib/repositories/interfaces/cart.repository";
+import type { IOrderRepository } from "@/lib/repositories/interfaces/order.repository";
+import type { IPaymentRepository } from "@/lib/repositories/interfaces/payment.repository";
+import type { IUserRepository } from "@/lib/repositories/interfaces/user.repository";
+import type { IProductRepository } from "@/lib/repositories/interfaces/product.repository";
 import { CartRepository } from "@/lib/repositories/cart.repository";
 import { OrderRepository } from "@/lib/repositories/order.repository";
 import { PaymentRepository } from "@/lib/repositories/payment.repository";
 import { UserRepository } from "@/lib/repositories/user.repository";
 import { ProductRepository } from "@/lib/repositories/product.repository";
-import { ICartService } from "../services/interfaces/cart.service";
-import { IProductService } from "../services/interfaces/product.service";
-import { IPaymentService } from "../services/interfaces/payment.service";
-import { IOrderService } from "../services/interfaces/order.service";
-import { IUserService } from "../services/interfaces/user.service";
+import type { ICartService } from "../services/interfaces/cart.service";
+import type { IProductService } from "../services/interfaces/product.service";
+import type { IPaymentService } from "../services/interfaces/payment.service";
+import type { IOrderService } from "../services/interfaces/order.service";
+import type { IUserService } from "../services/interfaces/user.service";
 import { CartService } from "../services/cart.service";
 import { ProductService } from "../services/product.service";
 import { PaymentService } from "../services/payment.service";
 import { OrderService } from "../services/order.service";
 import { UserService } from "../services/user.service";
+import { db } from "@/lib/db/drizzle";
 
-export function registerDependencies(db: Database) {
+let isInitialized = false;
+
+function initializeContainer() {
+  if (isInitialized) return;
+
   // Register Database
   container.registerInstance<Database>("Database", db);
 
@@ -60,7 +65,14 @@ export function registerDependencies(db: Database) {
   );
   container.registerSingleton<IOrderService>("OrderService", OrderService);
   container.registerSingleton<IUserService>("UserService", UserService);
+
+  isInitialized = true;
 }
+
+// 初期化を即時実行
+initializeContainer();
+
+export { container };
 
 export function getContainer() {
   return container;
