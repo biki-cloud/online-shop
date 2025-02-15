@@ -71,11 +71,9 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     };
   }
 
-  const passwordHash = await hashPassword(password);
-
   const createdUser = await userService.create({
     email,
-    passwordHash,
+    password,
     name,
     role: "user",
   });
