@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { Database } from "@/lib/infrastructure/db/drizzle";
@@ -25,15 +25,20 @@ export class ProductRepository
   }
 
   async findAll(): Promise<Product[]> {
-    return await this.db.select().from(products);
+    const result = await this.db
+      .select()
+      .from(products)
+      .where(isNull(products.deletedAt))
+      .execute();
+    return result;
   }
 
   async findById(id: number): Promise<Product | null> {
     const result = await this.db
       .select()
       .from(products)
-      .where(eq(products.id, id))
-      .limit(1);
+      .where(and(eq(products.id, id), isNull(products.deletedAt)))
+      .execute();
     return result[0] ?? null;
   }
 
@@ -50,7 +55,8 @@ export class ProductRepository
         createdAt: new Date(),
         updatedAt: new Date(),
       })
-      .returning();
+      .returning()
+      .execute();
 
     return newProduct;
   }
@@ -71,7 +77,8 @@ export class ProductRepository
         updatedAt: new Date(),
       })
       .where(eq(products.id, id))
-      .returning();
+      .returning()
+      .execute();
 
     return updatedProduct ?? null;
   }
@@ -83,7 +90,8 @@ export class ProductRepository
         deletedAt: new Date(),
       })
       .where(eq(products.id, id))
-      .returning();
+      .returning()
+      .execute();
 
     return !!deletedProduct;
   }
