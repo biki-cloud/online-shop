@@ -1,27 +1,33 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import { User, CreateUserInput, UpdateUserInput } from "@/lib/domain/user";
-import { getContainer } from "@/lib/di/container-provider";
+import type { User, CreateUserInput, UpdateUserInput } from "@/lib/domain/user";
+import { getContainer } from "@/lib/di/container";
+import type { IUserService } from "@/lib/services/interfaces/user.service";
 import { getSession } from "@/lib/auth/session";
 
-export async function getUserById(id: number): Promise<User | null> {
+function getUserService() {
   const container = getContainer();
-  return await container.userService.findById(id);
+  return container.resolve<IUserService>("UserService");
+}
+
+export async function getUserById(id: number): Promise<User | null> {
+  const userService = getUserService();
+  return await userService.findById(id);
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const container = getContainer();
-  return await container.userService.findByEmail(email);
+  const userService = getUserService();
+  return await userService.findByEmail(email);
 }
 
 export async function createUser(
   data: Omit<CreateUserInput, "passwordHash"> & { password: string }
 ): Promise<User> {
-  const container = getContainer();
+  const userService = getUserService();
   const passwordHash = await hash(data.password, 10);
   const { password, ...rest } = data;
-  return await container.userService.create({
+  return await userService.create({
     ...rest,
     passwordHash,
   });
@@ -31,7 +37,7 @@ export async function updateUser(
   id: number,
   data: Omit<UpdateUserInput, "passwordHash"> & { password?: string }
 ): Promise<User | null> {
-  const container = getContainer();
+  const userService = getUserService();
   const updateData: UpdateUserInput = { ...data };
 
   if (data.password) {
@@ -39,26 +45,26 @@ export async function updateUser(
     delete data.password;
   }
 
-  return await container.userService.update(id, updateData);
+  return await userService.update(id, updateData);
 }
 
 export async function deleteUser(id: number): Promise<boolean> {
-  const container = getContainer();
-  return await container.userService.delete(id);
+  const userService = getUserService();
+  return await userService.delete(id);
 }
 
 export async function validateUserPassword(
   email: string,
   password: string
 ): Promise<User | null> {
-  const container = getContainer();
-  return await container.userService.validatePassword(email, password);
+  const userService = getUserService();
+  return await userService.validatePassword(email, password);
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   const session = await getSession();
-  if (!session?.user) return null;
+  if (!session) return null;
 
-  const container = getContainer();
-  return await container.userService.findById(session.user.id);
+  const userService = getUserService();
+  return await userService.findById(session.user.id);
 }

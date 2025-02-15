@@ -1,3 +1,5 @@
+import "reflect-metadata";
+import { container } from "tsyringe";
 import { Database } from "@/lib/db/drizzle";
 import { ICartRepository } from "@/lib/repositories/interfaces/cart.repository";
 import { IOrderRepository } from "@/lib/repositories/interfaces/order.repository";
@@ -20,42 +22,46 @@ import { PaymentService } from "../services/payment.service";
 import { OrderService } from "../services/order.service";
 import { UserService } from "../services/user.service";
 
-export interface DIContainer {
-  db: Database;
-  cartRepository: ICartRepository;
-  orderRepository: IOrderRepository;
-  paymentRepository: IPaymentRepository;
-  userRepository: IUserRepository;
-  productRepository: IProductRepository;
-  cartService: ICartService;
-  productService: IProductService;
-  paymentService: IPaymentService;
-  orderService: IOrderService;
-  userService: IUserService;
+export function registerDependencies(db: Database) {
+  // Register Database
+  container.registerInstance<Database>("Database", db);
+
+  // Register Repositories
+  container.registerSingleton<ICartRepository>(
+    "CartRepository",
+    CartRepository
+  );
+  container.registerSingleton<IOrderRepository>(
+    "OrderRepository",
+    OrderRepository
+  );
+  container.registerSingleton<IPaymentRepository>(
+    "PaymentRepository",
+    PaymentRepository
+  );
+  container.registerSingleton<IUserRepository>(
+    "UserRepository",
+    UserRepository
+  );
+  container.registerSingleton<IProductRepository>(
+    "ProductRepository",
+    ProductRepository
+  );
+
+  // Register Services
+  container.registerSingleton<ICartService>("CartService", CartService);
+  container.registerSingleton<IProductService>(
+    "ProductService",
+    ProductService
+  );
+  container.registerSingleton<IPaymentService>(
+    "PaymentService",
+    PaymentService
+  );
+  container.registerSingleton<IOrderService>("OrderService", OrderService);
+  container.registerSingleton<IUserService>("UserService", UserService);
 }
 
-export const createContainer = (db: Database): DIContainer => {
-  const cartRepository = new CartRepository(db);
-  const orderRepository = new OrderRepository(db);
-  const paymentRepository = new PaymentRepository(db);
-  const userRepository = new UserRepository(db);
-  const productRepository = new ProductRepository(db);
-
-  return {
-    db,
-    cartRepository,
-    orderRepository,
-    paymentRepository,
-    userRepository,
-    productRepository,
-    cartService: new CartService(cartRepository),
-    productService: new ProductService(productRepository),
-    paymentService: new PaymentService(
-      paymentRepository,
-      cartRepository,
-      orderRepository
-    ),
-    orderService: new OrderService(orderRepository),
-    userService: new UserService(userRepository),
-  };
-};
+export function getContainer() {
+  return container;
+}

@@ -1,13 +1,19 @@
-import {
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { IProductRepository } from "../repositories/interfaces/product.repository";
+import type { IProductService } from "./interfaces/product.service";
+import type {
   Product,
   CreateProductInput,
   UpdateProductInput,
 } from "@/lib/domain/product";
-import { IProductRepository } from "../repositories/interfaces/product.repository";
-import { IProductService } from "./interfaces/product.service";
 
+@injectable()
 export class ProductService implements IProductService {
-  constructor(private readonly productRepository: IProductRepository) {}
+  constructor(
+    @inject("ProductRepository")
+    private readonly productRepository: IProductRepository
+  ) {}
 
   async findById(id: number): Promise<Product | null> {
     return await this.productRepository.findById(id);

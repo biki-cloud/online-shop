@@ -1,15 +1,21 @@
 import { eq } from "drizzle-orm";
-import { Database } from "../db/drizzle";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
 import { Order, OrderItem, orders, orderItems, products } from "../db/schema";
-import { IOrderRepository } from "./interfaces/order.repository";
+import type { IOrderRepository } from "./interfaces/order.repository";
 import { BaseRepository } from "./base.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
 
+@injectable()
 export class OrderRepository
   extends BaseRepository<Order>
   implements IOrderRepository
 {
-  constructor(db: Database) {
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
     super(db, orders);
   }
 

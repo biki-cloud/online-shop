@@ -1,9 +1,15 @@
-import { Cart, CartItem } from "@/lib/domain/cart";
-import { ICartRepository } from "../repositories/interfaces/cart.repository";
-import { ICartService } from "./interfaces/cart.service";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { ICartRepository } from "../repositories/interfaces/cart.repository";
+import type { ICartService } from "./interfaces/cart.service";
+import type { Cart, CartItem } from "@/lib/domain/cart";
 
+@injectable()
 export class CartService implements ICartService {
-  constructor(private readonly cartRepository: ICartRepository) {}
+  constructor(
+    @inject("CartRepository")
+    private readonly cartRepository: ICartRepository
+  ) {}
 
   async findActiveCart(userId: number): Promise<Cart | null> {
     return await this.cartRepository.findActiveCartByUserId(userId);
@@ -18,18 +24,15 @@ export class CartService implements ICartService {
     productId: number,
     quantity: number = 1
   ): Promise<CartItem> {
-    const cart = await this.findActiveCart(userId);
+    let cart = await this.findActiveCart(userId);
+
     if (!cart) {
-      const newCart = await this.cartRepository.create({
+      cart = await this.cartRepository.create({
         userId,
         status: "active",
       });
-      return await this.cartRepository.addToCart(
-        newCart.id,
-        productId,
-        quantity
-      );
     }
+
     return await this.cartRepository.addToCart(cart.id, productId, quantity);
   }
 
@@ -39,9 +42,8 @@ export class CartService implements ICartService {
     quantity: number
   ): Promise<CartItem | null> {
     const cart = await this.findActiveCart(userId);
-    if (!cart) {
-      throw new Error("カートが見つかりません");
-    }
+    if (!cart) return null;
+
     return await this.cartRepository.updateCartItemQuantity(
       cartItemId,
       quantity
@@ -50,9 +52,8 @@ export class CartService implements ICartService {
 
   async removeFromCart(userId: number, cartItemId: number): Promise<boolean> {
     const cart = await this.findActiveCart(userId);
-    if (!cart) {
-      throw new Error("カートが見つかりません");
-    }
+    if (!cart) return false;
+
     return await this.cartRepository.removeFromCart(cartItemId);
   }
 

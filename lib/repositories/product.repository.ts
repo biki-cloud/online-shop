@@ -1,10 +1,28 @@
 import { eq } from "drizzle-orm";
-import { Database } from "../db/drizzle";
-import { Product, products } from "../db/schema";
-import { IProductRepository } from "./interfaces/product.repository";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
+import { products } from "../db/schema";
+import type { IProductRepository } from "./interfaces/product.repository";
+import { BaseRepository } from "./base.repository";
+import { PgColumn } from "drizzle-orm/pg-core";
+import type { Product, CreateProductInput } from "@/lib/domain/product";
 
-export class ProductRepository implements IProductRepository {
-  constructor(private readonly db: Database) {}
+@injectable()
+export class ProductRepository
+  extends BaseRepository<Product, CreateProductInput>
+  implements IProductRepository
+{
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
+    super(db, products);
+  }
+
+  protected get idColumn(): PgColumn<any> {
+    return products.id;
+  }
 
   async findAll(): Promise<Product[]> {
     return await this.db.select().from(products);

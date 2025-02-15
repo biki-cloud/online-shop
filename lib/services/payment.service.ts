@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/payments/stripe";
-import { IPaymentRepository } from "../repositories/interfaces/payment.repository";
-import { ICartRepository } from "../repositories/interfaces/cart.repository";
-import { IOrderRepository } from "../repositories/interfaces/order.repository";
-import { Cart, CartItem } from "@/lib/domain/cart";
+import type { IPaymentRepository } from "../repositories/interfaces/payment.repository";
+import type { ICartRepository } from "../repositories/interfaces/cart.repository";
+import type { IOrderRepository } from "../repositories/interfaces/order.repository";
+import type { Cart, CartItem } from "@/lib/domain/cart";
 import { calculateOrderAmount } from "../utils";
 
 function isValidUrl(url: string): boolean {
@@ -32,10 +34,14 @@ function getFullImageUrl(imageUrl: string | null): string | undefined {
   return isValidUrl(fullUrl) ? fullUrl : undefined;
 }
 
+@injectable()
 export class PaymentService {
   constructor(
+    @inject("PaymentRepository")
     private readonly paymentRepository: IPaymentRepository,
+    @inject("CartRepository")
     private readonly cartRepository: ICartRepository,
+    @inject("OrderRepository")
     private readonly orderRepository: IOrderRepository
   ) {}
 

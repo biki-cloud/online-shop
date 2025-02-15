@@ -1,10 +1,15 @@
 import { compare } from "bcryptjs";
-import { User, CreateUserInput, UpdateUserInput } from "@/lib/domain/user";
-import { IUserRepository } from "../repositories/interfaces/user.repository";
-import { IUserService } from "./interfaces/user.service";
+import { inject, injectable } from "tsyringe";
+import type { User, CreateUserInput, UpdateUserInput } from "@/lib/domain/user";
+import type { IUserRepository } from "../repositories/interfaces/user.repository";
+import type { IUserService } from "./interfaces/user.service";
 
+@injectable()
 export class UserService implements IUserService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @inject("UserRepository")
+    private readonly userRepository: IUserRepository
+  ) {}
 
   async findById(id: number): Promise<User | null> {
     return await this.userRepository.findById(id);

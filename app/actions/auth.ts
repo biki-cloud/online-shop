@@ -9,10 +9,13 @@ import {
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
 import { hashPassword, setSession } from "@/lib/auth/session";
-import { getContainer } from "@/lib/di/container-provider";
+import { getContainer } from "@/lib/di/container";
+import type { IUserService } from "@/lib/services/interfaces/user.service";
 
-const container = getContainer();
-const userService = container.userService;
+function getUserService() {
+  const container = getContainer();
+  return container.resolve<IUserService>("UserService");
+}
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -21,6 +24,7 @@ const signInSchema = z.object({
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
+  const userService = getUserService();
 
   const user = await userService.validatePassword(email, password);
 
@@ -54,6 +58,7 @@ const signUpSchema = z.object({
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, name } = data;
+  const userService = getUserService();
 
   const existingUser = await userService.findByEmail(email);
 
@@ -118,6 +123,7 @@ export const updatePassword = validatedActionWithUser(
   updatePasswordSchema,
   async (data, _, user) => {
     const { currentPassword, newPassword } = data;
+    const userService = getUserService();
 
     const isValid = await userService.validatePassword(
       user.email,
@@ -150,6 +156,7 @@ export const deleteAccount = validatedActionWithUser(
   deleteAccountSchema,
   async (data, _, user) => {
     const { password } = data;
+    const userService = getUserService();
 
     const isValid = await userService.validatePassword(user.email, password);
     if (!isValid) {
@@ -172,6 +179,7 @@ export const updateAccount = validatedActionWithUser(
   updateAccountSchema,
   async (data, _, user) => {
     const { name, email } = data;
+    const userService = getUserService();
 
     await userService.update(user.id, { name, email });
 

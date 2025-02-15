@@ -1,11 +1,17 @@
 import { eq } from "drizzle-orm";
-import { Database } from "@/lib/db/drizzle";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
 import { User, NewUser, users } from "../db/schema";
-import { IUserRepository } from "./interfaces/user.repository";
+import type { IUserRepository } from "./interfaces/user.repository";
 import { comparePasswords } from "@/lib/auth/session";
 
+@injectable()
 export class UserRepository implements IUserRepository {
-  constructor(private readonly db: Database) {}
+  constructor(
+    @inject("Database")
+    private readonly db: Database
+  ) {}
 
   async findAll(): Promise<User[]> {
     return await this.db.select().from(users);

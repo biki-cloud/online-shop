@@ -1,6 +1,8 @@
-import { IOrderRepository } from "../repositories/interfaces/order.repository";
-import { IOrderService } from "./interfaces/order.service";
-import {
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { IOrderRepository } from "../repositories/interfaces/order.repository";
+import type { IOrderService } from "./interfaces/order.service";
+import type {
   Order,
   OrderItem,
   CreateOrderInput,
@@ -8,8 +10,12 @@ import {
   CreateOrderItemInput,
 } from "../domain/order";
 
+@injectable()
 export class OrderService implements IOrderService {
-  constructor(private readonly orderRepository: IOrderRepository) {}
+  constructor(
+    @inject("OrderRepository")
+    private readonly orderRepository: IOrderRepository
+  ) {}
 
   async findAll(): Promise<Order[]> {
     return await this.orderRepository.findAll();

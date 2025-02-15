@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/app/actions/user";
-import { getContainer } from "@/lib/di/container-provider";
+import { getContainer } from "@/lib/di/container";
+import { ICartService } from "@/lib/services/interfaces/cart.service";
+
+function getCartService() {
+  const container = getContainer();
+  return container.resolve<ICartService>("CartService");
+}
 
 export async function addToCart(productId: number, quantity: number = 1) {
   const user = await getCurrentUser();
@@ -10,8 +16,8 @@ export async function addToCart(productId: number, quantity: number = 1) {
     throw new Error("ログインが必要です");
   }
 
-  const container = getContainer();
-  await container.cartService.addToCart(user.id, productId, quantity);
+  const cartService = getCartService();
+  await cartService.addToCart(user.id, productId, quantity);
   revalidatePath("/cart");
 }
 
@@ -24,12 +30,8 @@ export async function updateCartItemQuantity(
     throw new Error("ログインが必要です");
   }
 
-  const container = getContainer();
-  await container.cartService.updateCartItemQuantity(
-    user.id,
-    cartItemId,
-    quantity
-  );
+  const cartService = getCartService();
+  await cartService.updateCartItemQuantity(user.id, cartItemId, quantity);
   revalidatePath("/cart");
 }
 
@@ -39,7 +41,7 @@ export async function removeFromCart(cartItemId: number) {
     throw new Error("ログインが必要です");
   }
 
-  const container = getContainer();
-  await container.cartService.removeFromCart(user.id, cartItemId);
+  const cartService = getCartService();
+  await cartService.removeFromCart(user.id, cartItemId);
   revalidatePath("/cart");
 }

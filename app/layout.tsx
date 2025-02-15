@@ -1,9 +1,15 @@
 import "./globals.css";
+import "reflect-metadata";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { UserProvider } from "@/lib/auth";
 import { getCurrentUser } from "@/app/actions/user";
 import { Nav } from "@/components/layout/nav";
+import { registerDependencies } from "@/lib/di/container";
+import { db } from "@/lib/db/drizzle";
+
+// DIコンテナの初期化
+registerDependencies(db);
 
 export const metadata: Metadata = {
   title: "Next.js SaaS Starter",

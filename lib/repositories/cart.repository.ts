@@ -1,16 +1,22 @@
 import { and, eq } from "drizzle-orm";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
 import { cartItems, carts, products } from "../db/schema";
 import { BaseRepository } from "./base.repository";
-import { ICartRepository } from "./interfaces/cart.repository";
+import type { ICartRepository } from "./interfaces/cart.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
-import { Database } from "../db/drizzle";
-import { Cart, CartItem, CreateCartInput } from "@/lib/domain/cart";
+import type { Cart, CartItem, CreateCartInput } from "@/lib/domain/cart";
 
+@injectable()
 export class CartRepository
   extends BaseRepository<Cart, CreateCartInput>
   implements ICartRepository
 {
-  constructor(db: Database) {
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
     super(db, carts);
   }
 

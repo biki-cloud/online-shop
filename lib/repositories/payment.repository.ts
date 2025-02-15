@@ -1,17 +1,17 @@
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
+import { stripe } from "@/lib/payments/stripe";
+import { orders } from "@/lib/db/schema";
+import type { Order } from "@/lib/db/schema";
+import type { IPaymentRepository } from "./interfaces/payment.repository";
 import { BaseRepository } from "./base.repository";
-import type { Cart, CartItem, Order, Product } from "@/lib/db/schema";
-import { Database } from "@/lib/db/drizzle";
-import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { calculateOrderAmount } from "@/lib/utils";
 import { updateOrder } from "@/app/actions/order";
 import { getFullImageUrl } from "@/lib/utils/url";
 import { PAYMENT_CONSTANTS, type PaymentStatus } from "@/lib/constants/payment";
-import { IPaymentRepository } from "./interfaces/payment.repository";
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
-});
+import { PgColumn } from "drizzle-orm/pg-core";
 
 class PaymentError extends Error {
   constructor(message: string) {
@@ -20,8 +20,21 @@ class PaymentError extends Error {
   }
 }
 
-export class PaymentRepository implements IPaymentRepository {
-  constructor(private readonly db: Database) {}
+@injectable()
+export class PaymentRepository
+  extends BaseRepository<Order>
+  implements IPaymentRepository
+{
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
+    super(db, orders);
+  }
+
+  protected get idColumn(): PgColumn<any> {
+    return orders.id;
+  }
 
   async createCheckoutSession(data: {
     userId: number;
