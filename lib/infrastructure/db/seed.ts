@@ -66,78 +66,117 @@ async function seedProducts() {
 
   const testProducts: NewProduct[] = [
     {
-      name: "プロテインシェイク - バニラ",
+      name: "クラシック ホワイト Tシャツ",
       description:
-        "高品質なホエイプロテインを使用した美味しいバニラ風味のプロテインシェイク。1食あたり20gのタンパク質を含有。",
-      price: "3500",
+        "上質なコットン100%を使用した、シンプルで着回しやすいベーシックTシャツ。",
+      price: "4900",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1594498653385-d5172c532c00?w=800&q=80",
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
       stock: 100,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
     {
-      name: "ヨガマット - プレミアム",
+      name: "フローラル サマードレス",
       description:
-        "環境に優しい素材を使用した、滑り止め付きの高品質ヨガマット。厚さ6mm。",
-      price: "5000",
+        "軽やかな花柄プリントの夏向けワンピース。エレガントなデザインで、デイリーからパーティーまで幅広く活躍。",
+      price: "12800",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=800&q=80",
+        "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?w=800&q=80",
       stock: 50,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
     {
-      name: "ダンベル 5kg セット",
+      name: "デニムジャケット - ヴィンテージウォッシュ",
       description:
-        "耐久性のある素材で作られた5kgのダンベルセット。快適なグリップ付き。",
-      price: "4500",
+        "クラシックなデザインのデニムジャケット。ヴィンテージ加工が施された、こなれた雰囲気の一着。",
+      price: "15800",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80",
+        "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&q=80",
       stock: 30,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
     {
-      name: "スポーツドリンク 24本セット",
+      name: "レザースニーカー - ホワイト",
       description:
-        "電解質とビタミンを含む、運動時の水分補給に最適なスポーツドリンク。",
-      price: "2800",
+        "上質なレザーを使用したミニマルデザインのスニーカー。どんなスタイルにも合わせやすい万能アイテム。",
+      price: "13500",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=800&q=80",
-      stock: 200,
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=800&q=80",
+      stock: 45,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
     {
-      name: "トレーニンググローブ",
+      name: "トートバッグ - キャメル",
       description:
-        "手のひらの保護と滑り止め効果があるトレーニング用グローブ。サイズ：M",
-      price: "2000",
+        "高級レザーを使用した大容量トートバッグ。ビジネスからカジュアルまで幅広く使える実用的なデザイン。",
+      price: "24800",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1583473848882-f9a5bc7fd2ee?w=800&q=80",
-      stock: 75,
+        "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
+      stock: 25,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
     {
-      name: "ジムバッグ - プロフェッショナル",
-      description: "大容量で多機能なジムバッグ。シューズ収納部屋付き。",
-      price: "6500",
+      name: "アビエーターサングラス",
+      description:
+        "クラシックなアビエーターデザインのサングラス。UV400カット機能付き。",
+      price: "16500",
       currency: "JPY",
       imageUrl:
-        "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80",
+        "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80",
+      stock: 60,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ウールブレンドセーター - グレー",
+      description:
+        "上質なウールブレンド素材を使用した、暖かみのあるクルーネックセーター。",
+      price: "9800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&q=80",
       stock: 40,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "スリムフィットチノパン - ベージュ",
+      description:
+        "コットンツイル素材を使用した、スリムフィットのチノパン。オフィスカジュアルにも最適。",
+      price: "8900",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&q=80",
+      stock: 55,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "レザーベルト - ブラウン",
+      description: "イタリアンレザーを使用した、クラシックなデザインのベルト。",
+      price: "7500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1553981834-a23f5b69e3ec?w=800&q=80",
+      stock: 70,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
