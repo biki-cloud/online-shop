@@ -162,4 +162,12 @@ describe("ProductRepository", () => {
       expect(result).toBeFalsy();
     });
   });
+
+  describe("idColumn", () => {
+    it("should return the id column", () => {
+      // @ts-ignore - accessing protected property for testing
+      const idColumn = repository.idColumn;
+      expect(idColumn).toBe(products.id);
+    });
+  });
 });
