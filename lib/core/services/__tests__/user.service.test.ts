@@ -11,7 +11,9 @@ import type {
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashedPassword"),
-  compare: jest.fn().mockResolvedValue(true),
+  compare: jest.fn().mockImplementation(async (password, hash) => {
+    return password === "password123";
+  }),
 }));
 
 describe("UserService", () => {
@@ -191,6 +193,71 @@ describe("UserService", () => {
           email: "existing@example.com",
         })
       ).rejects.toThrow("このメールアドレスは既に使用されています。");
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete user successfully", async () => {
+      jest.spyOn(mockUserRepository, "delete").mockResolvedValue(true);
+
+      const result = await userService.delete(1);
+
+      expect(result).toBe(true);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith(1);
+    });
+
+    it("should return false when user deletion fails", async () => {
+      jest.spyOn(mockUserRepository, "delete").mockResolvedValue(false);
+
+      const result = await userService.delete(1);
+
+      expect(result).toBe(false);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("validatePassword", () => {
+    it("should return user when email and password are valid", async () => {
+      jest.spyOn(mockUserRepository, "findByEmail").mockResolvedValue(mockUser);
+
+      const user = await userService.validatePassword(
+        "test@example.com",
+        "password123"
+      );
+
+      expect(user).toEqual(mockUser);
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        "test@example.com"
+      );
+    });
+
+    it("should return null when user is not found", async () => {
+      jest.spyOn(mockUserRepository, "findByEmail").mockResolvedValue(null);
+
+      const user = await userService.validatePassword(
+        "test@example.com",
+        "password123"
+      );
+
+      expect(user).toBeNull();
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        "test@example.com"
+      );
+    });
+
+    it("should return null when password is invalid", async () => {
+      jest.spyOn(mockUserRepository, "findByEmail").mockResolvedValue(mockUser);
+      jest.spyOn(require("bcryptjs"), "compare").mockResolvedValueOnce(false);
+
+      const user = await userService.validatePassword(
+        "test@example.com",
+        "wrongpassword"
+      );
+
+      expect(user).toBeNull();
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        "test@example.com"
+      );
     });
   });
 });

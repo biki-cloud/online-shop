@@ -389,9 +389,18 @@ export class MockUserRepository {
     const now = new Date();
     return {
       id,
+      email: "test@example.com",
+      name: "Test User",
+      passwordHash: "hashedPassword",
+      role: "user",
       createdAt: now,
       updatedAt: now,
+      deletedAt: null,
       ...data,
-    } as User;
+    };
+  }
+
+  async delete(id: number): Promise<boolean> {
+    return true;
   }
 }
