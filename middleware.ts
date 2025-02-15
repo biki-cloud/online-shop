@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { signToken, verifyToken } from "@/lib/auth/session";
+import { signToken, verifyToken } from "@/lib/infrastructure/auth/session";
 
 const protectedRoutes = ["/cart", "/checkout"];
 const adminRoutes = ["/admin"];

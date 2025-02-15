@@ -18,8 +18,8 @@ import Image from "next/image";
 import {
   productFormSchema,
   type ProductFormValues,
-} from "@/lib/validations/product";
-import { useImageUpload } from "@/lib/hooks/use-image-upload";
+} from "@/lib/shared/validations/product";
+import { useImageUpload } from "@/lib/shared/hooks/use-image-upload";
 import { toast } from "sonner";
 
 interface ProductFormProps {

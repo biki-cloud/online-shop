@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getSession } from "@/lib/infrastructure/auth/session";
 import { CartItems } from "@/components/cart/cart-items";
 import { CartSummary } from "@/components/cart/cart-summary";
 import { container } from "@/lib/di/container";
-import type { ICartService } from "@/lib/services/interfaces/cart.service";
-import type { CartItem } from "@/lib/domain/cart";
-import type { Product } from "@/lib/domain/product";
+import type { ICartService } from "@/lib/core/services/interfaces/cart.service";
+import type { CartItem } from "@/lib/core/domain/cart";
+import type { Product } from "@/lib/core/domain/product";
 
 export default async function CartPage() {
   const session = await getSession();

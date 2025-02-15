@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProduct } from "@/app/actions/product";
 import { AdminProductDetail } from "@/components/admin/products/product-detail";
-import { checkAdmin } from "@/lib/auth/middleware";
+import { checkAdmin } from "@/lib/infrastructure/auth/middleware";
 
 interface Props {
   params: {

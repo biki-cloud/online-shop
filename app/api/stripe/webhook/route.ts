@@ -3,7 +3,7 @@ import {
   handlePaymentSuccess,
   handlePaymentFailure,
   stripe,
-} from "@/lib/payments/stripe";
+} from "@/lib/infrastructure/payments/stripe";
 import { NextRequest, NextResponse } from "next/server";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;

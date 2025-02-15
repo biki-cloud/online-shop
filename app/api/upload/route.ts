@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
-import { uploadFile } from "@/lib/storage";
-import { USE_MOCK } from "@/lib/config";
+import { uploadFile } from "@/lib/infrastructure/storage/storage";
+import { USE_MOCK } from "@/lib/di/config";
 
 export async function POST(request: Request) {
   console.log("POST /api/upload");

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/lib/auth";
+import { useUser } from "@/lib/infrastructure/auth";
 import {
   Loader2,
   ShoppingCart,

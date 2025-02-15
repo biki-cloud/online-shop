@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth/session";
+import { getSession } from "@/lib/infrastructure/auth/session";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({

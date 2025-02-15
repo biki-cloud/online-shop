@@ -1,4 +1,4 @@
-import { User } from "@/lib/db/schema";
+import { User } from "@/lib/infrastructure/db/schema";
 
 interface ProfileFormProps {
   user: User;

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";
-import { User } from "@/lib/db/schema";
+import { User } from "@/lib/infrastructure/db/schema";
 
 export const metadata: Metadata = {
   title: "設定",

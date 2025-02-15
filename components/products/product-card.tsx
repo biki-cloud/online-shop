@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Product } from "@/lib/db/schema";
+import { Product } from "@/lib/infrastructure/db/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "./product-image";
-import { formatPrice, formatNumber } from "@/lib/utils/format";
+import { formatPrice, formatNumber } from "@/lib/shared/utils/format";
 
 interface ProductCardProps {
   product: Product;

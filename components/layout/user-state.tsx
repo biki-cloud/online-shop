@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "./sign-out-button";
-import { User as UserType } from "@/lib/db/schema";
+import { User as UserType } from "@/lib/infrastructure/db/schema";
 
 interface UserStateProps {
   user: UserType | null;

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getSession } from "@/lib/infrastructure/auth/session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,12 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatPrice, calculateOrderAmount } from "@/lib/utils";
+import { formatPrice, calculateOrderAmount } from "@/lib/shared/utils";
 import { container } from "@/lib/di/container";
-import type { CartItem } from "@/lib/domain/cart";
-import type { Product } from "@/lib/domain/product";
-import type { ICartService } from "@/lib/services/interfaces/cart.service";
-import type { IPaymentService } from "@/lib/services/interfaces/payment.service";
+import type { CartItem } from "@/lib/core/domain/cart";
+import type { Product } from "@/lib/core/domain/product";
+import type { ICartService } from "@/lib/core/services/interfaces/cart.service";
+import type { IPaymentService } from "@/lib/core/services/interfaces/payment.service";
 
 export default async function CheckoutPage() {
   const session = await getSession();

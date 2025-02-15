@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { CartItem, Product } from "@/lib/db/schema";
-import { formatPrice } from "@/lib/utils";
+import { CartItem, Product } from "@/lib/infrastructure/db/schema";
+import { formatPrice } from "@/lib/shared/utils";
 import { useRouter } from "next/navigation";
 
 interface CartSummaryProps {
