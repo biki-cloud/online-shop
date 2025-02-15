@@ -40,6 +40,7 @@ type MockBuilder = {
   delete: jest.Mock;
   returning: jest.Mock;
   execute: jest.Mock;
+  orderBy: jest.Mock;
 };
 
 type MockMethod = keyof MockBuilder;
@@ -59,6 +60,7 @@ const createMockBuilder = (): MockBuilder => {
     "delete",
     "returning",
     "execute",
+    "orderBy",
   ];
 
   methods.forEach((method) => {

@@ -2,7 +2,13 @@ import { eq } from "drizzle-orm";
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { Database } from "@/lib/infrastructure/db/drizzle";
-import { Order, OrderItem, orders, orderItems, products } from "@/lib/infrastructure/db/schema";
+import {
+  Order,
+  OrderItem,
+  orders,
+  orderItems,
+  products,
+} from "@/lib/infrastructure/db/schema";
 import type { IOrderRepository } from "./interfaces/order.repository";
 import { BaseRepository } from "./base.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
@@ -142,6 +148,7 @@ export class OrderRepository
       })
       .from(orderItems)
       .leftJoin(products, eq(orderItems.productId, products.id))
-      .where(eq(orderItems.orderId, orderId));
+      .where(eq(orderItems.orderId, orderId))
+      .orderBy(orderItems.createdAt);
   }
 }
