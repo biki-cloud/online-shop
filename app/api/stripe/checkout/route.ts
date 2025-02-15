@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/payments/stripe";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
-import { PaymentService } from "@/lib/services/payment.service";
+import { container } from "@/lib/di/container";
+import type { IPaymentService } from "@/lib/services/interfaces/payment.service";
+import type { IOrderService } from "@/lib/services/interfaces/order.service";
+import type { ICartService } from "@/lib/services/interfaces/cart.service";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,29 +15,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const container = createContainer(db);
-    const paymentService = new PaymentService(
-      container.paymentRepository,
-      container.cartRepository,
-      container.orderRepository
-    );
+    const paymentService = container.resolve<IPaymentService>("PaymentService");
+    const orderService = container.resolve<IOrderService>("OrderService");
+    const cartService = container.resolve<ICartService>("CartService");
 
-    const orders = await container.orderRepository.findAll();
-    const order = orders.find((o) => o.stripeSessionId === sessionId);
-
+    const order = await orderService.findByStripeSessionId(sessionId);
     if (!order) {
-      throw new Error("Order not found for this session.");
+      throw new Error("注文が見つかりません。");
     }
 
     if (session.payment_status === "paid") {
       await paymentService.handlePaymentSuccess(session);
-      await container.cartRepository.clearCart(order.userId);
+      await cartService.clearCart(order.userId);
       return NextResponse.redirect(new URL("/orders/" + order.id, request.url));
     }
 
     return NextResponse.redirect(new URL("/orders/" + order.id, request.url));
   } catch (error) {
-    console.error("Error handling successful checkout:", error);
+    console.error("チェックアウト処理中にエラーが発生しました:", error);
     return NextResponse.redirect(new URL("/error", request.url));
   }
 }
