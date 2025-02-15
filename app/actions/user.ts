@@ -1,7 +1,11 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import type { User, CreateUserInput, UpdateUserInput } from "@/lib/core/domain/user";
+import type {
+  User,
+  CreateUserInput,
+  UpdateUserInput,
+} from "@/lib/core/domain/user";
 import { getContainer } from "@/lib/di/container";
 import type { IUserService } from "@/lib/core/services/interfaces/user.service";
 import { getSession } from "@/lib/infrastructure/auth/session";
@@ -21,31 +25,17 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   return await userService.findByEmail(email);
 }
 
-export async function createUser(
-  data: Omit<CreateUserInput, "passwordHash"> & { password: string }
-): Promise<User> {
+export async function createUser(data: CreateUserInput): Promise<User> {
   const userService = getUserService();
-  const passwordHash = await hash(data.password, 10);
-  const { password, ...rest } = data;
-  return await userService.create({
-    ...rest,
-    passwordHash,
-  });
+  return await userService.create(data);
 }
 
 export async function updateUser(
   id: number,
-  data: Omit<UpdateUserInput, "passwordHash"> & { password?: string }
+  data: UpdateUserInput
 ): Promise<User | null> {
   const userService = getUserService();
-  const updateData: UpdateUserInput = { ...data };
-
-  if (data.password) {
-    updateData.passwordHash = await hash(data.password, 10);
-    delete data.password;
-  }
-
-  return await userService.update(id, updateData);
+  return await userService.update(id, data);
 }
 
 export async function deleteUser(id: number): Promise<boolean> {

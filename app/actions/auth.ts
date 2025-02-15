@@ -140,7 +140,7 @@ export const updatePassword = validatedActionWithUser(
 
     const newPasswordHash = await hashPassword(newPassword);
 
-    await userService.update(user.id, { passwordHash: newPasswordHash });
+    await userService.update(user.id, { password: newPassword });
 
     return { success: "パスワードを更新しました。" };
   }
