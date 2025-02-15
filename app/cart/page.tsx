@@ -4,7 +4,8 @@ import { CartItems } from "@/components/cart/cart-items";
 import { CartSummary } from "@/components/cart/cart-summary";
 import { container } from "@/lib/di/container";
 import type { ICartService } from "@/lib/services/interfaces/cart.service";
-import type { CartItem } from "@/lib/db/schema";
+import type { CartItem } from "@/lib/domain/cart";
+import type { Product } from "@/lib/domain/product";
 
 export default async function CartPage() {
   const session = await getSession();
@@ -27,18 +28,7 @@ export default async function CartPage() {
   }
 
   const cartItems = (await cartService.getCartItems(cart.id)) as (CartItem & {
-    product: {
-      id: number;
-      name: string;
-      description: string | null;
-      price: string;
-      currency: string;
-      imageUrl: string | null;
-      stock: number;
-      createdAt: Date;
-      updatedAt: Date;
-      deletedAt: Date | null;
-    } | null;
+    product: Product | null;
   })[];
 
   return (
