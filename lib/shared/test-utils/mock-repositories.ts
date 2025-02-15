@@ -10,6 +10,14 @@ import type { CreateCartInput } from "@/lib/core/domain/cart";
 import type { CreateOrderInput } from "@/lib/core/domain/order";
 import type { CreateProductInput } from "@/lib/core/domain/product";
 import type { NewUser } from "@/lib/infrastructure/db/schema";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { Database } from "@/lib/infrastructure/db/drizzle";
+import type {
+  PgSelectBuilder,
+  PgUpdateBuilder,
+  PgInsertBuilder,
+  PgDeleteBase,
+} from "drizzle-orm/pg-core";
 
 interface CartItemWithProduct extends CartItem {
   product?: {
@@ -18,6 +26,60 @@ interface CartItemWithProduct extends CartItem {
     currency: string;
   } | null;
 }
+
+type MockBuilder = {
+  select: jest.Mock;
+  from: jest.Mock;
+  where: jest.Mock;
+  limit: jest.Mock;
+  leftJoin: jest.Mock;
+  insert: jest.Mock;
+  values: jest.Mock;
+  update: jest.Mock;
+  set: jest.Mock;
+  delete: jest.Mock;
+  returning: jest.Mock;
+  execute: jest.Mock;
+};
+
+type MockMethod = keyof MockBuilder;
+
+const createMockBuilder = (): MockBuilder => {
+  const builder: Partial<MockBuilder> = {};
+  const methods: MockMethod[] = [
+    "select",
+    "from",
+    "where",
+    "limit",
+    "leftJoin",
+    "insert",
+    "values",
+    "update",
+    "set",
+    "delete",
+    "returning",
+    "execute",
+  ];
+
+  methods.forEach((method) => {
+    builder[method] = jest.fn().mockReturnThis();
+  });
+
+  return builder as MockBuilder;
+};
+
+export const mockDb = {
+  ...createMockBuilder(),
+  _: {},
+  query: jest.fn(),
+  $with: jest.fn(),
+  $count: jest.fn(),
+  $client: {},
+  transaction: jest.fn(),
+  $transaction: jest.fn(),
+  $queryBuilder: jest.fn(),
+  $drizzle: {},
+} as unknown as Database;
 
 export class MockCartRepository {
   async create(input: CreateCartInput): Promise<Cart> {
