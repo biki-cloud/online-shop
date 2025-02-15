@@ -81,27 +81,27 @@ export class PaymentService implements IPaymentService {
       }))
     );
 
-    const sessionId = await this.paymentRepository.createCheckoutSession({
+    const session = await this.paymentRepository.createCheckoutSession({
       userId,
       orderId: order.id,
     });
 
-    if (!sessionId) {
+    if (!session) {
       throw new Error("チェックアウトセッションの作成に失敗しました。");
     }
 
     await this.orderRepository.update(order.id, {
-      stripeSessionId: sessionId,
+      stripeSessionId: session.id,
     });
 
-    // Stripeのチェックアウトセッションを取得
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (!session.url) {
+    // セッション情報を取得して確認
+    const stripeSession = await stripe.checkout.sessions.retrieve(session.id);
+    if (!stripeSession.url) {
       throw new Error("チェックアウトURLの取得に失敗しました。");
     }
 
     // Stripeのチェックアウトページにリダイレクト
-    redirect(session.url);
+    redirect(stripeSession.url);
   }
 
   async handleCheckoutSession(

@@ -300,8 +300,11 @@ export class MockPaymentRepository {
   async createCheckoutSession(data: {
     userId: number;
     orderId: number;
-  }): Promise<string | undefined> {
-    return "session_123";
+  }): Promise<{ id: string; url: string }> {
+    return {
+      id: "session_123",
+      url: "https://checkout.stripe.com/session",
+    };
   }
 
   async handlePaymentSuccess(sessionId: string): Promise<void> {

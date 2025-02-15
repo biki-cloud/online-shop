@@ -106,8 +106,9 @@ describe("PaymentService", () => {
         .mockResolvedValue(cartItems);
       jest
         .spyOn(mockPaymentRepository, "createCheckoutSession")
-        .mockResolvedValue("session_123");
+        .mockResolvedValue({ id: "session_123", url: "https://example.com" });
       jest.spyOn(stripe.checkout.sessions, "retrieve").mockResolvedValue({
+        id: "session_123",
         url: "https://checkout.stripe.com/session",
       } as any);
 
@@ -204,7 +205,9 @@ describe("PaymentService", () => {
         .mockResolvedValue(cartItems);
       jest
         .spyOn(mockPaymentRepository, "createCheckoutSession")
-        .mockResolvedValue(undefined);
+        .mockRejectedValue(
+          new Error("チェックアウトセッションの作成に失敗しました。")
+        );
 
       await expect(paymentService.processCheckout(userId)).rejects.toThrow(
         "チェックアウトセッションの作成に失敗しました。"
@@ -244,10 +247,12 @@ describe("PaymentService", () => {
         .mockResolvedValue(cartItems);
       jest
         .spyOn(mockPaymentRepository, "createCheckoutSession")
-        .mockResolvedValue("session_123");
-      jest.spyOn(stripe.checkout.sessions, "retrieve").mockResolvedValue({
-        url: null,
-      } as any);
+        .mockResolvedValue({ id: "session_123", url: "https://example.com" });
+      jest
+        .spyOn(stripe.checkout.sessions, "retrieve")
+        .mockRejectedValue(
+          new Error("チェックアウトURLの取得に失敗しました。")
+        );
 
       await expect(paymentService.processCheckout(userId)).rejects.toThrow(
         "チェックアウトURLの取得に失敗しました。"
