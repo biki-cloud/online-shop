@@ -4,7 +4,7 @@ import { User } from "@/lib/infrastructure/db/schema";
 import { getContainer } from "@/lib/di/container";
 import { IUserService } from "@/lib/core/services/interfaces/user.service";
 import { createCheckoutSession } from "@/lib/infrastructure/payments/stripe";
-import { setSession } from "@/lib/infrastructure/auth/session";
+import { setSession, hashPassword } from "@/lib/infrastructure/auth/session";
 import {
   signIn,
   signUp,
