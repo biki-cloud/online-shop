@@ -70,6 +70,22 @@ const createMockBuilder = (): MockBuilder => {
   return builder as MockBuilder;
 };
 
+type MockDatabase = {
+  select: jest.Mock;
+  from: jest.Mock;
+  where: jest.Mock;
+  limit: jest.Mock;
+  _: {};
+  query: jest.Mock;
+  $with: jest.Mock;
+  $count: jest.Mock;
+  $client: {};
+  transaction: jest.Mock;
+  $transaction: jest.Mock;
+  $queryBuilder: jest.Mock;
+  $drizzle: {};
+};
+
 export const mockDb = {
   ...createMockBuilder(),
   _: {},
@@ -81,7 +97,11 @@ export const mockDb = {
   $transaction: jest.fn(),
   $queryBuilder: jest.fn(),
   $drizzle: {},
-} as unknown as Database;
+  select: jest.fn().mockReturnThis(),
+  from: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+} as unknown as MockDatabase;
 
 export class MockCartRepository {
   async create(input: CreateCartInput): Promise<Cart> {
