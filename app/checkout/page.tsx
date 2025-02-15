@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice, calculateOrderAmount } from "@/lib/utils";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
-import { CartItem } from "@/lib/db/schema";
-import { PaymentService } from "@/lib/services/payment.service";
+import { container } from "@/lib/di/container";
+import type { CartItem } from "@/lib/domain/cart";
+import type { Product } from "@/lib/domain/product";
+import type { ICartService } from "@/lib/services/interfaces/cart.service";
+import type { IPaymentService } from "@/lib/services/interfaces/payment.service";
 
 export default async function CheckoutPage() {
   const session = await getSession();
@@ -20,26 +21,24 @@ export default async function CheckoutPage() {
     redirect("/sign-in");
   }
 
-  const container = createContainer(db);
-  const cart = await container.cartRepository.findActiveCartByUserId(
-    session.user.id
-  );
+  const cartService = container.resolve<ICartService>("CartService");
+
+  const cart = await cartService.findActiveCart(session.user.id);
   if (!cart) {
     redirect("/cart");
   }
 
-  const cartItems = await container.cartRepository.getCartItems(cart.id);
+  const cartItems = (await cartService.getCartItems(cart.id)) as (CartItem & {
+    product: Product | null;
+  })[];
   if (cartItems.length === 0) {
     redirect("/cart");
   }
 
-  const subtotal = cartItems.reduce(
-    (acc: number, item: CartItem & { product: any }) => {
-      if (!item.product) return acc;
-      return acc + Number(item.product.price) * item.quantity;
-    },
-    0
-  );
+  const subtotal = cartItems.reduce((acc: number, item) => {
+    if (!item.product) return acc;
+    return acc + Number(item.product.price) * item.quantity;
+  }, 0);
 
   const { tax, total } = calculateOrderAmount(subtotal);
 
@@ -49,12 +48,7 @@ export default async function CheckoutPage() {
     const currentSession = await getSession();
     if (!currentSession?.user) return;
 
-    const container = createContainer(db);
-    const paymentService = new PaymentService(
-      container.paymentRepository,
-      container.cartRepository,
-      container.orderRepository
-    );
+    const paymentService = container.resolve<IPaymentService>("PaymentService");
     await paymentService.processCheckout(currentSession.user.id);
   }
 
@@ -66,7 +60,7 @@ export default async function CheckoutPage() {
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="space-y-4">
-            {cartItems.map((item: CartItem & { product: any }) => (
+            {cartItems.map((item) => (
               <div key={item.id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {item.product?.imageUrl && (
@@ -99,18 +93,18 @@ export default async function CheckoutPage() {
               <div>{formatPrice(subtotal, "JPY")}</div>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <div>消費税（10%）</div>
+              <div>消費税</div>
               <div>{formatPrice(tax, "JPY")}</div>
             </div>
-            <div className="flex items-center justify-between border-t pt-2 text-lg font-semibold">
+            <div className="flex items-center justify-between font-medium">
               <div>合計</div>
               <div>{formatPrice(total, "JPY")}</div>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="justify-end">
-          <form action={handleCheckout}>
-            <Button type="submit" size="lg">
+        <CardFooter>
+          <form action={handleCheckout} className="w-full">
+            <Button type="submit" className="w-full">
               注文を確定する
             </Button>
           </form>

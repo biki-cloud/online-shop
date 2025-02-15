@@ -2,32 +2,26 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { PaymentService } from "@/lib/services/payment.service";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
+import { getContainer } from "@/lib/di/container";
 import type Stripe from "stripe";
+import { IPaymentService } from "@/lib/services/interfaces/payment.service";
+
+function getPaymentService() {
+  const container = getContainer();
+  return container.resolve<IPaymentService>("PaymentService");
+}
 
 export async function checkoutAction(formData: FormData) {
   const session = await getSession();
   if (!session) {
     redirect("/sign-in");
   }
-
-  const container = createContainer(db);
-  const paymentService = new PaymentService(
-    container.paymentRepository,
-    container.cartRepository
-  );
+  const paymentService = getPaymentService();
   await paymentService.processCheckout(session.user.id);
 }
 
 export async function handleStripeWebhook(session: Stripe.Checkout.Session) {
-  const container = createContainer(db);
-  const paymentService = new PaymentService(
-    container.paymentRepository,
-    container.cartRepository
-  );
-
+  const paymentService = getPaymentService();
   if (session.payment_status === "paid") {
     await paymentService.handlePaymentSuccess(session);
   } else if (session.payment_status === "unpaid") {
@@ -36,19 +30,11 @@ export async function handleStripeWebhook(session: Stripe.Checkout.Session) {
 }
 
 export async function getStripePrices() {
-  const container = createContainer(db);
-  const paymentService = new PaymentService(
-    container.paymentRepository,
-    container.cartRepository
-  );
+  const paymentService = getPaymentService();
   return await paymentService.getStripePrices();
 }
 
 export async function getStripeProducts() {
-  const container = createContainer(db);
-  const paymentService = new PaymentService(
-    container.paymentRepository,
-    container.cartRepository
-  );
+  const paymentService = getPaymentService();
   return await paymentService.getStripeProducts();
 }

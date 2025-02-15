@@ -1,15 +1,35 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/drizzle";
-import { Product, products } from "../db/schema";
-import { IProductRepository } from "./interfaces/product.repository";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
+import { products } from "../db/schema";
+import type { IProductRepository } from "./interfaces/product.repository";
+import { BaseRepository } from "./base.repository";
+import { PgColumn } from "drizzle-orm/pg-core";
+import type { Product, CreateProductInput } from "@/lib/domain/product";
 
-export class ProductRepository implements IProductRepository {
+@injectable()
+export class ProductRepository
+  extends BaseRepository<Product, CreateProductInput>
+  implements IProductRepository
+{
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
+    super(db, products);
+  }
+
+  protected get idColumn(): PgColumn<any> {
+    return products.id;
+  }
+
   async findAll(): Promise<Product[]> {
-    return await db.select().from(products);
+    return await this.db.select().from(products);
   }
 
   async findById(id: number): Promise<Product | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(products)
       .where(eq(products.id, id))
@@ -23,7 +43,7 @@ export class ProductRepository implements IProductRepository {
       "name" | "description" | "price" | "stock" | "currency" | "imageUrl"
     >
   ): Promise<Product> {
-    const [newProduct] = await db
+    const [newProduct] = await this.db
       .insert(products)
       .values({
         ...data,
@@ -44,7 +64,7 @@ export class ProductRepository implements IProductRepository {
       >
     >
   ): Promise<Product | null> {
-    const [updatedProduct] = await db
+    const [updatedProduct] = await this.db
       .update(products)
       .set({
         ...data,
@@ -57,7 +77,7 @@ export class ProductRepository implements IProductRepository {
   }
 
   async delete(id: number): Promise<boolean> {
-    const [deletedProduct] = await db
+    const [deletedProduct] = await this.db
       .update(products)
       .set({
         deletedAt: new Date(),
@@ -68,6 +88,3 @@ export class ProductRepository implements IProductRepository {
     return !!deletedProduct;
   }
 }
-
-// シングルトンインスタンスをエクスポート
-export const productRepository = new ProductRepository();

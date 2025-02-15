@@ -1,17 +1,14 @@
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
+import { stripe } from "@/lib/payments/stripe";
+import { orders, orderItems, products } from "@/lib/db/schema";
+import type { Order, OrderItem, Product } from "@/lib/db/schema";
+import type { IPaymentRepository } from "./interfaces/payment.repository";
 import { BaseRepository } from "./base.repository";
-import type { Cart, CartItem, Order, Product } from "@/lib/db/schema";
-import { Database } from "@/lib/db/drizzle";
-import Stripe from "stripe";
-import { redirect } from "next/navigation";
-import { calculateOrderAmount } from "@/lib/utils";
-import { updateOrder } from "@/app/actions/order";
+import { eq } from "drizzle-orm";
 import { getFullImageUrl } from "@/lib/utils/url";
-import { PAYMENT_CONSTANTS, type PaymentStatus } from "@/lib/constants/payment";
-import { IPaymentRepository } from "./interfaces/payment.repository";
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
-});
+import { PgColumn } from "drizzle-orm/pg-core";
 
 class PaymentError extends Error {
   constructor(message: string) {
@@ -20,8 +17,74 @@ class PaymentError extends Error {
   }
 }
 
-export class PaymentRepository implements IPaymentRepository {
-  constructor(private readonly db: Database) {}
+@injectable()
+export class PaymentRepository
+  extends BaseRepository<Order>
+  implements IPaymentRepository
+{
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
+    super(db, orders);
+  }
+
+  protected get idColumn(): PgColumn<any> {
+    return orders.id;
+  }
+
+  async findById(id: number): Promise<Order | null> {
+    const result = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id))
+      .limit(1);
+    return result[0] ?? null;
+  }
+
+  async findAll(): Promise<Order[]> {
+    return await this.db.select().from(orders);
+  }
+
+  async create(data: {
+    userId: number;
+    totalAmount: string;
+    currency: string;
+    status?: string;
+    shippingAddress?: string;
+    stripeSessionId?: string;
+    stripePaymentIntentId?: string;
+  }): Promise<Order> {
+    const [order] = await this.db
+      .insert(orders)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return order;
+  }
+
+  async update(id: number, data: Partial<Order>): Promise<Order | null> {
+    const result = await this.db
+      .update(orders)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, id))
+      .returning();
+    return result[0] ?? null;
+  }
+
+  async delete(id: number): Promise<boolean> {
+    const result = await this.db
+      .delete(orders)
+      .where(eq(orders.id, id))
+      .returning();
+    return result.length > 0;
+  }
 
   async createCheckoutSession(data: {
     userId: number;
@@ -32,33 +95,78 @@ export class PaymentRepository implements IPaymentRepository {
       throw new PaymentError("注文が見つかりません。");
     }
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: [...PAYMENT_CONSTANTS.SUPPORTED_PAYMENT_METHODS],
-      line_items: [
-        {
-          price_data: {
-            currency: order.currency.toLowerCase(),
-            product_data: {
-              name: `注文 #${order.id}`,
-            },
-            unit_amount: Number(order.totalAmount),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.BASE_URL}/cart`,
-      metadata: {
-        orderId: data.orderId.toString(),
-      },
-    });
+    type OrderItemWithProduct = OrderItem & {
+      product: Pick<Product, "id" | "name" | "description" | "imageUrl">;
+    };
 
-    if (!session.url) {
-      throw new PaymentError("Stripeセッションの作成に失敗しました。");
+    const items = await this.db
+      .select({
+        id: orderItems.id,
+        orderId: orderItems.orderId,
+        productId: orderItems.productId,
+        quantity: orderItems.quantity,
+        price: orderItems.price,
+        currency: orderItems.currency,
+        createdAt: orderItems.createdAt,
+        updatedAt: orderItems.updatedAt,
+        product: {
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          imageUrl: products.imageUrl,
+        },
+      })
+      .from(orderItems)
+      .leftJoin(products, eq(orderItems.productId, products.id))
+      .where(eq(orderItems.orderId, order.id));
+
+    if (!items.length) {
+      throw new PaymentError("注文アイテムが見つかりません。");
     }
 
-    return session.url;
+    const lineItems = items.map((item) => {
+      if (!item.product) {
+        throw new PaymentError("商品情報が見つかりません。");
+      }
+
+      const priceWithTax = Math.round(Number(item.price) * 1.1);
+      const fullImageUrl = getFullImageUrl(item.product.imageUrl);
+
+      return {
+        price_data: {
+          currency: item.currency.toLowerCase(),
+          product_data: {
+            name: item.product.name,
+            description: item.product.description || undefined,
+            images: fullImageUrl ? [fullImageUrl] : undefined,
+          },
+          unit_amount: priceWithTax,
+        },
+        quantity: item.quantity,
+      };
+    });
+
+    if (!lineItems.length) {
+      throw new PaymentError("商品情報の作成に失敗しました。");
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: lineItems,
+        mode: "payment",
+        success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.BASE_URL}/cart`,
+        metadata: {
+          orderId: order.id.toString(),
+        },
+      });
+
+      return session.id;
+    } catch (error) {
+      console.error("Stripeセッションの作成に失敗しました:", error);
+      throw new PaymentError("決済セッションの作成に失敗しました。");
+    }
   }
 
   async handlePaymentSuccess(sessionId: string): Promise<void> {
@@ -68,8 +176,8 @@ export class PaymentRepository implements IPaymentRepository {
       throw new PaymentError("注文IDが見つかりません。");
     }
 
-    await updateOrder(orderId, {
-      status: "paid" as PaymentStatus,
+    await this.update(orderId, {
+      status: "paid",
       stripePaymentIntentId: session.payment_intent as string,
     });
   }
@@ -81,8 +189,8 @@ export class PaymentRepository implements IPaymentRepository {
       throw new PaymentError("注文IDが見つかりません。");
     }
 
-    await updateOrder(orderId, {
-      status: "failed" as PaymentStatus,
+    await this.update(orderId, {
+      status: "failed",
     });
   }
 
@@ -119,26 +227,5 @@ export class PaymentRepository implements IPaymentRepository {
           ? product.default_price
           : product.default_price?.id,
     }));
-  }
-
-  // BaseRepositoryの実装
-  async findById(id: number): Promise<Order | null> {
-    throw new Error("Method not implemented.");
-  }
-
-  async findAll(): Promise<Order[]> {
-    throw new Error("Method not implemented.");
-  }
-
-  async create(data: Partial<Order>): Promise<Order> {
-    throw new Error("Method not implemented.");
-  }
-
-  async update(id: number, data: Partial<Order>): Promise<Order | null> {
-    throw new Error("Method not implemented.");
-  }
-
-  async delete(id: number): Promise<boolean> {
-    throw new Error("Method not implemented.");
   }
 }

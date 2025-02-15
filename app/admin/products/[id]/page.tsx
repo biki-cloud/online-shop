@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductById } from "@/app/actions/product";
+import { getProduct } from "@/app/actions/product";
 import { AdminProductDetail } from "@/components/admin/products/product-detail";
 import { checkAdmin } from "@/lib/auth/middleware";
 
@@ -14,7 +14,7 @@ export default async function AdminProductDetailPage(props: Props) {
     const params = await Promise.resolve(props.params);
     const [isAdmin, product] = await Promise.all([
       checkAdmin(),
-      getProductById(Number(params.id)),
+      getProduct(Number(params.id)),
     ]);
 
     if (!isAdmin || !product) {

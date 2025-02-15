@@ -2,8 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/app/actions/user";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
+import { getContainer } from "@/lib/di/container";
+import { ICartService } from "@/lib/services/interfaces/cart.service";
+
+function getCartService() {
+  const container = getContainer();
+  return container.resolve<ICartService>("CartService");
+}
 
 export async function addToCart(productId: number, quantity: number = 1) {
   const user = await getCurrentUser();
@@ -11,16 +16,8 @@ export async function addToCart(productId: number, quantity: number = 1) {
     throw new Error("ログインが必要です");
   }
 
-  const container = createContainer(db);
-  let cart = await container.cartRepository.findActiveCartByUserId(user.id);
-  if (!cart) {
-    cart = await container.cartRepository.create({
-      userId: user.id,
-      status: "active",
-    });
-  }
-
-  await container.cartRepository.addToCart(cart.id, productId, quantity);
+  const cartService = getCartService();
+  await cartService.addToCart(user.id, productId, quantity);
   revalidatePath("/cart");
 }
 
@@ -33,8 +30,8 @@ export async function updateCartItemQuantity(
     throw new Error("ログインが必要です");
   }
 
-  const container = createContainer(db);
-  await container.cartRepository.updateCartItemQuantity(cartItemId, quantity);
+  const cartService = getCartService();
+  await cartService.updateCartItemQuantity(user.id, cartItemId, quantity);
   revalidatePath("/cart");
 }
 
@@ -44,7 +41,7 @@ export async function removeFromCart(cartItemId: number) {
     throw new Error("ログインが必要です");
   }
 
-  const container = createContainer(db);
-  await container.cartRepository.removeFromCart(cartItemId);
+  const cartService = getCartService();
+  await cartService.removeFromCart(user.id, cartItemId);
   revalidatePath("/cart");
 }

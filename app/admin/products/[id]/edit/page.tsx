@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductById } from "@/app/actions/product";
+import { getProduct } from "@/app/actions/product";
 import { checkAdmin } from "@/lib/auth/middleware";
 import { AdminProductForm } from "@/components/admin/products/product-form";
 
@@ -15,7 +15,7 @@ export default async function AdminProductEditPage({ params }: Props) {
     notFound();
   }
 
-  const product = await getProductById(Number(params.id));
+  const product = await getProduct(Number(params.id));
   if (!product) {
     notFound();
   }

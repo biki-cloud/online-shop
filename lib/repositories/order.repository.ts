@@ -1,15 +1,21 @@
 import { eq } from "drizzle-orm";
-import { Database } from "../db/drizzle";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
+import type { Database } from "@/lib/db/drizzle";
 import { Order, OrderItem, orders, orderItems, products } from "../db/schema";
-import { IOrderRepository } from "./interfaces/order.repository";
+import type { IOrderRepository } from "./interfaces/order.repository";
 import { BaseRepository } from "./base.repository";
 import { PgColumn } from "drizzle-orm/pg-core";
 
+@injectable()
 export class OrderRepository
   extends BaseRepository<Order>
   implements IOrderRepository
 {
-  constructor(db: Database) {
+  constructor(
+    @inject("Database")
+    protected readonly db: Database
+  ) {
     super(db, orders);
   }
 
@@ -36,6 +42,15 @@ export class OrderRepository
       .from(orders)
       .where(eq(orders.userId, userId))
       .orderBy(orders.createdAt);
+  }
+
+  async findByStripeSessionId(sessionId: string): Promise<Order | null> {
+    const result = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.stripeSessionId, sessionId))
+      .limit(1);
+    return result[0] ?? null;
   }
 
   async create(data: {
@@ -89,7 +104,7 @@ export class OrderRepository
       stripePaymentIntentId: string;
     }>
   ): Promise<Order | null> {
-    const [updatedOrder] = await this.db
+    const result = await this.db
       .update(orders)
       .set({
         ...data,
@@ -97,8 +112,7 @@ export class OrderRepository
       })
       .where(eq(orders.id, id))
       .returning();
-
-    return updatedOrder ?? null;
+    return result[0] ?? null;
   }
 
   async getOrderItems(orderId: number): Promise<

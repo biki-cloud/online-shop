@@ -9,11 +9,13 @@ import {
   validatedActionWithUser,
 } from "@/lib/auth/middleware";
 import { hashPassword, setSession } from "@/lib/auth/session";
-import { db } from "@/lib/db/drizzle";
-import { createContainer } from "@/lib/di/container";
+import { getContainer } from "@/lib/di/container";
+import type { IUserService } from "@/lib/services/interfaces/user.service";
 
-const container = createContainer(db);
-const userRepository = container.userRepository;
+function getUserService() {
+  const container = getContainer();
+  return container.resolve<IUserService>("UserService");
+}
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -22,8 +24,9 @@ const signInSchema = z.object({
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
+  const userService = getUserService();
 
-  const user = await userRepository.verifyPassword(email, password);
+  const user = await userService.validatePassword(email, password);
 
   if (!user) {
     return {
@@ -55,8 +58,9 @@ const signUpSchema = z.object({
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, name } = data;
+  const userService = getUserService();
 
-  const existingUser = await userRepository.findByEmail(email);
+  const existingUser = await userService.findByEmail(email);
 
   if (existingUser) {
     return {
@@ -69,7 +73,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   const passwordHash = await hashPassword(password);
 
-  const createdUser = await userRepository.create({
+  const createdUser = await userService.create({
     email,
     passwordHash,
     name,
@@ -119,8 +123,9 @@ export const updatePassword = validatedActionWithUser(
   updatePasswordSchema,
   async (data, _, user) => {
     const { currentPassword, newPassword } = data;
+    const userService = getUserService();
 
-    const isValid = await userRepository.verifyPassword(
+    const isValid = await userService.validatePassword(
       user.email,
       currentPassword
     );
@@ -137,7 +142,7 @@ export const updatePassword = validatedActionWithUser(
 
     const newPasswordHash = await hashPassword(newPassword);
 
-    await userRepository.update(user.id, { passwordHash: newPasswordHash });
+    await userService.update(user.id, { passwordHash: newPasswordHash });
 
     return { success: "パスワードを更新しました。" };
   }
@@ -151,13 +156,14 @@ export const deleteAccount = validatedActionWithUser(
   deleteAccountSchema,
   async (data, _, user) => {
     const { password } = data;
+    const userService = getUserService();
 
-    const isValid = await userRepository.verifyPassword(user.email, password);
+    const isValid = await userService.validatePassword(user.email, password);
     if (!isValid) {
       return { error: "パスワードが正しくありません。" };
     }
 
-    await userRepository.delete(user.id);
+    await userService.delete(user.id);
 
     (await cookies()).delete("session");
     redirect("/sign-in");
@@ -173,8 +179,9 @@ export const updateAccount = validatedActionWithUser(
   updateAccountSchema,
   async (data, _, user) => {
     const { name, email } = data;
+    const userService = getUserService();
 
-    await userRepository.update(user.id, { name, email });
+    await userService.update(user.id, { name, email });
 
     return { success: "アカウント情報を更新しました。" };
   }

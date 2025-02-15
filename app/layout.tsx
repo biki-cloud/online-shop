@@ -1,4 +1,5 @@
 import "./globals.css";
+import "reflect-metadata";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { UserProvider } from "@/lib/auth";

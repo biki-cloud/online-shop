@@ -5,6 +5,7 @@ export interface IOrderRepository extends IBaseRepository<Order> {
   findAll(): Promise<Order[]>;
   findById(id: number): Promise<Order | null>;
   findByUserId(userId: number): Promise<Order[]>;
+  findByStripeSessionId(sessionId: string): Promise<Order | null>;
   create(data: {
     userId: number;
     totalAmount: string;

@@ -1,11 +1,10 @@
-import { Cart, CartItem, Product } from "@/lib/db/schema";
+import { Cart, CartItem, CreateCartInput } from "@/lib/domain/cart";
 import { IBaseRepository } from "../base.repository";
 
-export interface ICartRepository extends IBaseRepository<Cart> {
+export interface ICartRepository
+  extends IBaseRepository<Cart, CreateCartInput> {
   findActiveCartByUserId(userId: number): Promise<Cart | null>;
-  getCartItems(
-    cartId: number
-  ): Promise<(CartItem & { product: Product | null })[]>;
+  getCartItems(cartId: number): Promise<CartItem[]>;
   addToCart(
     cartId: number,
     productId: number,
