@@ -25,12 +25,13 @@ export abstract class BaseRepository<T, TCreateInput = Partial<T>>
       .select()
       .from(this.table)
       .where(eq(this.idColumn, id))
-      .limit(1);
+      .limit(1)
+      .execute();
     return (result as T) || null;
   }
 
   async findAll(): Promise<T[]> {
-    const result = await this.db.select().from(this.table);
+    const result = await this.db.select().from(this.table).execute();
     return result as T[];
   }
 
@@ -38,7 +39,8 @@ export abstract class BaseRepository<T, TCreateInput = Partial<T>>
     const [result] = await this.db
       .insert(this.table)
       .values(data as any)
-      .returning();
+      .returning()
+      .execute();
     return result as T;
   }
 
@@ -47,7 +49,8 @@ export abstract class BaseRepository<T, TCreateInput = Partial<T>>
       .update(this.table)
       .set({ ...data, updatedAt: new Date() } as any)
       .where(eq(this.idColumn, id))
-      .returning();
+      .returning()
+      .execute();
     return (result as T) || null;
   }
 
@@ -55,7 +58,8 @@ export abstract class BaseRepository<T, TCreateInput = Partial<T>>
     const result = await this.db
       .delete(this.table)
       .where(eq(this.idColumn, id))
-      .returning();
+      .returning()
+      .execute();
     return result.length > 0;
   }
 }

@@ -5,7 +5,7 @@ export interface IPaymentRepository extends IBaseRepository<Order> {
   createCheckoutSession(data: {
     userId: number;
     orderId: number;
-  }): Promise<string>;
+  }): Promise<{ id: string; url: string }>;
   handlePaymentSuccess(sessionId: string): Promise<void>;
   handlePaymentFailure(sessionId: string): Promise<void>;
   getStripePrices(): Promise<any[]>;

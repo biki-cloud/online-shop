@@ -12,13 +12,13 @@ export interface User {
 export type CreateUserInput = {
   name: string;
   email: string;
-  passwordHash: string;
+  password: string;
   role?: string;
 };
 
 export type UpdateUserInput = Partial<{
   name: string;
   email: string;
-  passwordHash: string;
+  password: string;
   role: string;
 }>;

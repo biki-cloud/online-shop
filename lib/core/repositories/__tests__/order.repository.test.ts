@@ -1,157 +1,282 @@
 import { OrderRepository } from "../order.repository";
-import { MockOrderRepository } from "@/lib/shared/test-utils/mock-repositories";
-import { Order, OrderItem } from "@/lib/infrastructure/db/schema";
+import { mockDb } from "@/lib/shared/test-utils/mock-repositories";
+import { orders, orderItems, products } from "@/lib/infrastructure/db/schema";
+import { eq } from "drizzle-orm";
+import type { Database } from "@/lib/infrastructure/db/drizzle";
+
+jest.mock("@/lib/infrastructure/db/drizzle", () => ({
+  ...jest.requireActual("@/lib/infrastructure/db/drizzle"),
+}));
 
 describe("OrderRepository", () => {
-  let repository: MockOrderRepository;
+  let repository: OrderRepository;
+  const mockOrder = {
+    id: 1,
+    userId: 1,
+    status: "pending" as const,
+    totalAmount: "1000",
+    currency: "jpy",
+    stripeSessionId: null,
+    stripePaymentIntentId: null,
+    shippingAddress: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockOrderItem = {
+    id: 1,
+    orderId: 1,
+    productId: 1,
+    quantity: 1,
+    price: "1000",
+    currency: "jpy",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockProduct = {
+    id: 1,
+    name: "Test Product",
+    description: "Test Description",
+    price: "1000",
+    currency: "jpy",
+    imageUrl: "test.jpg",
+    stock: 10,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   beforeEach(() => {
-    repository = new MockOrderRepository();
+    jest.clearAllMocks();
+    repository = new OrderRepository(mockDb as unknown as Database);
+  });
+
+  describe("findAll", () => {
+    it("should return all orders", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnValue([mockOrder]);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual([mockOrder]);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(orders);
+    });
+  });
+
+  describe("findById", () => {
+    it("should return order by id", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([mockOrder]);
+
+      const result = await repository.findById(1);
+
+      expect(result).toEqual(mockOrder);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(orders);
+      expect(db.where).toHaveBeenCalledWith(eq(orders.id, 1));
+      expect(db.limit).toHaveBeenCalledWith(1);
+    });
+
+    it("should return null when order not found", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([]);
+
+      const result = await repository.findById(1);
+
+      expect(result).toBeNull();
+    });
   });
 
   describe("findByUserId", () => {
-    it("ユーザーの注文を見つけられること", async () => {
-      const userId = 1;
-      const order = await repository.create({
-        userId,
-        totalAmount: "1000",
-        currency: "JPY",
-      });
+    it("should return orders by user id", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.orderBy.mockReturnValue([mockOrder]);
 
-      const result = await repository.findByUserId(userId);
-      expect(result).toEqual([order]);
+      const result = await repository.findByUserId(1);
+
+      expect(result).toEqual([mockOrder]);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(orders);
+      expect(db.where).toHaveBeenCalledWith(eq(orders.userId, 1));
+      expect(db.orderBy).toHaveBeenCalledWith(orders.createdAt);
+    });
+  });
+
+  describe("findByStripeSessionId", () => {
+    it("should return order by stripe session id", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([mockOrder]);
+
+      const result = await repository.findByStripeSessionId("session_123");
+
+      expect(result).toEqual(mockOrder);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(orders);
+      expect(db.where).toHaveBeenCalledWith(
+        eq(orders.stripeSessionId, "session_123")
+      );
+      expect(db.limit).toHaveBeenCalledWith(1);
     });
 
-    it("他のユーザーの注文は見つからないこと", async () => {
-      const userId = 1;
-      await repository.create({
-        userId: 2,
+    it("should return null when order not found", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([]);
+
+      const result = await repository.findByStripeSessionId("session_123");
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("create", () => {
+    it("should create new order", async () => {
+      const db = mockDb as any;
+      db.insert.mockReturnThis();
+      db.values.mockReturnThis();
+      db.returning.mockReturnValue([mockOrder]);
+
+      const result = await repository.create({
+        userId: 1,
         totalAmount: "1000",
-        currency: "JPY",
+        currency: "jpy",
       });
 
-      const result = await repository.findByUserId(userId);
-      expect(result).toHaveLength(0);
+      expect(result).toEqual(mockOrder);
+      expect(db.insert).toHaveBeenCalledWith(orders);
+      expect(db.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 1,
+          totalAmount: "1000",
+          currency: "jpy",
+          status: "pending",
+        })
+      );
+      expect(db.returning).toHaveBeenCalled();
     });
   });
 
   describe("createOrderItems", () => {
-    it("注文アイテムを作成できること", async () => {
-      const orderId = 1;
+    it("should create order items", async () => {
+      const db = mockDb as any;
+      db.insert.mockReturnThis();
+      db.values.mockReturnThis();
+      db.returning.mockReturnValue([mockOrderItem]);
+
       const items = [
         {
           productId: 1,
-          quantity: 2,
-          price: "1000",
-          currency: "JPY",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          productId: 2,
           quantity: 1,
-          price: "2000",
-          currency: "JPY",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      const result = await repository.createOrderItems(orderId, items);
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual(
-        expect.objectContaining({
-          orderId,
-          productId: items[0].productId,
-          quantity: items[0].quantity,
-          price: items[0].price,
-          currency: items[0].currency,
-          createdAt: items[0].createdAt,
-          updatedAt: items[0].updatedAt,
-        })
-      );
-    });
-  });
-
-  describe("getOrderItems", () => {
-    it("注文アイテムを取得できること", async () => {
-      const orderId = 1;
-      const items = [
-        {
-          productId: 1,
-          quantity: 2,
           price: "1000",
-          currency: "JPY",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          currency: "jpy",
         },
       ];
 
-      await repository.createOrderItems(orderId, items);
-      const result = await repository.getOrderItems(orderId);
+      const result = await repository.createOrderItems(1, items);
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(
-        expect.objectContaining({
-          orderId,
-          productId: items[0].productId,
-          quantity: items[0].quantity,
-          price: items[0].price,
-          currency: items[0].currency,
-          createdAt: items[0].createdAt,
-          updatedAt: items[0].updatedAt,
-        })
+      expect(result).toEqual([mockOrderItem]);
+      expect(db.insert).toHaveBeenCalledWith(orderItems);
+      expect(db.values).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            orderId: 1,
+            productId: 1,
+            quantity: 1,
+            price: "1000",
+            currency: "jpy",
+          }),
+        ])
       );
-    });
-
-    it("他の注文のアイテムは取得されないこと", async () => {
-      const orderId = 1;
-      const items = [
-        {
-          productId: 1,
-          quantity: 2,
-          price: "1000",
-          currency: "JPY",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      await repository.createOrderItems(2, items);
-      const result = await repository.getOrderItems(orderId);
-
-      expect(result).toHaveLength(0);
+      expect(db.returning).toHaveBeenCalled();
     });
   });
 
   describe("update", () => {
-    it("注文のステータスを更新できること", async () => {
-      const order = await repository.create({
-        userId: 1,
-        totalAmount: "1000",
-        currency: "JPY",
-      });
+    it("should update order", async () => {
+      const db = mockDb as any;
+      db.update.mockReturnThis();
+      db.set.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([{ ...mockOrder, status: "paid" }]);
 
-      const result = await repository.update(order.id, {
-        status: "completed",
-        stripeSessionId: "session_id",
-        stripePaymentIntentId: "payment_intent_id",
-      });
+      const result = await repository.update(1, { status: "paid" });
 
-      expect(result).toEqual(
+      expect(result).toEqual({ ...mockOrder, status: "paid" });
+      expect(db.update).toHaveBeenCalledWith(orders);
+      expect(db.set).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: order.id,
-          status: "completed",
-          stripeSessionId: "session_id",
-          stripePaymentIntentId: "payment_intent_id",
+          status: "paid",
+          updatedAt: expect.any(Date),
         })
       );
+      expect(db.where).toHaveBeenCalledWith(eq(orders.id, 1));
+      expect(db.returning).toHaveBeenCalled();
     });
 
-    it("存在しない注文の更新は失敗すること", async () => {
-      const result = await repository.update(999, { status: "completed" });
+    it("should return null when order not found", async () => {
+      const db = mockDb as any;
+      db.update.mockReturnThis();
+      db.set.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([]);
+
+      const result = await repository.update(1, { status: "paid" });
+
       expect(result).toBeNull();
+    });
+  });
+
+  describe("getOrderItems", () => {
+    it("should return order items with products", async () => {
+      const mockOrderItemWithProduct = {
+        ...mockOrderItem,
+        product: {
+          id: mockProduct.id,
+        },
+      };
+
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.leftJoin.mockReturnThis();
+      db.orderBy.mockReturnValue([mockOrderItemWithProduct]);
+
+      const result = await repository.getOrderItems(1);
+
+      expect(result).toEqual([mockOrderItemWithProduct]);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(orderItems);
+      expect(db.where).toHaveBeenCalledWith(eq(orderItems.orderId, 1));
+      expect(db.leftJoin).toHaveBeenCalledWith(
+        products,
+        eq(orderItems.productId, products.id)
+      );
+      expect(db.orderBy).toHaveBeenCalledWith(orderItems.createdAt);
+    });
+  });
+
+  describe("idColumn", () => {
+    it("should return the correct id column", () => {
+      // @ts-ignore - accessing protected property for testing
+      const idColumn = repository.idColumn;
+      expect(idColumn).toBe(orders.id);
     });
   });
 });

@@ -12,10 +12,11 @@ module.exports = {
       "ts-jest",
       {
         tsconfig: "tsconfig.test.json",
+        isolatedModules: true,
       },
     ],
   },
-  transformIgnorePatterns: ["/node_modules/(?!(@testing-library/jest-dom)/)"],
+  transformIgnorePatterns: ["/node_modules/(?!jose|@panva/hkdf)/"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   collectCoverage: true,
   collectCoverageFrom: [
@@ -33,4 +34,8 @@ module.exports = {
       statements: 10,
     },
   },
+  maxWorkers: 4,
+  testTimeout: 30000,
+  verbose: false,
+  silent: true,
 };

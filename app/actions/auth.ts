@@ -71,11 +71,9 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     };
   }
 
-  const passwordHash = await hashPassword(password);
-
   const createdUser = await userService.create({
     email,
-    passwordHash,
+    password,
     name,
     role: "user",
   });
@@ -142,7 +140,7 @@ export const updatePassword = validatedActionWithUser(
 
     const newPasswordHash = await hashPassword(newPassword);
 
-    await userService.update(user.id, { passwordHash: newPasswordHash });
+    await userService.update(user.id, { password: newPassword });
 
     return { success: "パスワードを更新しました。" };
   }

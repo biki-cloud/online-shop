@@ -34,12 +34,13 @@ export class PaymentRepository
   }
 
   async findById(id: number): Promise<Order | null> {
-    const result = await this.db
+    const [result] = await this.db
       .select()
       .from(orders)
       .where(eq(orders.id, id))
-      .limit(1);
-    return result[0] ?? null;
+      .limit(1)
+      .execute();
+    return result || null;
   }
 
   async findAll(): Promise<Order[]> {
@@ -89,7 +90,7 @@ export class PaymentRepository
   async createCheckoutSession(data: {
     userId: number;
     orderId: number;
-  }): Promise<string> {
+  }): Promise<{ id: string; url: string }> {
     const order = await this.findById(data.orderId);
     if (!order) {
       throw new PaymentError("注文が見つかりません。");
@@ -118,7 +119,8 @@ export class PaymentRepository
       })
       .from(orderItems)
       .leftJoin(products, eq(orderItems.productId, products.id))
-      .where(eq(orderItems.orderId, order.id));
+      .where(eq(orderItems.orderId, data.orderId))
+      .execute();
 
     if (!items.length) {
       throw new PaymentError("注文アイテムが見つかりません。");
@@ -162,7 +164,10 @@ export class PaymentRepository
         },
       });
 
-      return session.id;
+      return {
+        id: session.id,
+        url: session.url || "",
+      };
     } catch (error) {
       console.error("Stripeセッションの作成に失敗しました:", error);
       throw new PaymentError("決済セッションの作成に失敗しました。");

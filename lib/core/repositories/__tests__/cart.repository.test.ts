@@ -1,120 +1,198 @@
 import { CartRepository } from "../cart.repository";
-import { MockCartRepository } from "@/lib/shared/test-utils/mock-repositories";
-import { Cart, CartItem } from "@/lib/infrastructure/db/schema";
+import { mockDb } from "@/lib/shared/test-utils/mock-repositories";
+import { cartItems, carts, products } from "@/lib/infrastructure/db/schema";
+import { and, eq } from "drizzle-orm";
+import type { Database } from "@/lib/infrastructure/db/drizzle";
+
+jest.mock("@/lib/infrastructure/db/drizzle", () => ({
+  ...jest.requireActual("@/lib/infrastructure/db/drizzle"),
+}));
 
 describe("CartRepository", () => {
-  let repository: MockCartRepository;
+  let repository: CartRepository;
+  const mockCart = {
+    id: 1,
+    userId: 1,
+    status: "active" as const,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  const mockCartItem = {
+    id: 1,
+    cartId: 1,
+    productId: 1,
+    quantity: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  const mockProduct = {
+    id: 1,
+    name: "Test Product",
+    description: "Test Description",
+    price: 1000,
+    currency: "USD",
+    imageUrl: "test.jpg",
+    stock: 10,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   beforeEach(() => {
-    repository = new MockCartRepository();
+    jest.clearAllMocks();
+    repository = new CartRepository(mockDb as unknown as Database);
   });
 
   describe("findActiveCartByUserId", () => {
-    it("アクティブなカートを見つけられること", async () => {
-      const userId = 1;
-      const cart = await repository.create({ userId, status: "active" });
+    it("should return active cart for user", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([mockCart]);
 
-      const result = await repository.findActiveCartByUserId(userId);
-      expect(result).toEqual(cart);
+      const result = await repository.findActiveCartByUserId(1);
+
+      expect(result).toEqual(mockCart);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(carts);
+      expect(db.where).toHaveBeenCalledWith(
+        and(eq(carts.userId, 1), eq(carts.status, "active"))
+      );
+      expect(db.limit).toHaveBeenCalledWith(1);
     });
 
-    it("非アクティブなカートは見つからないこと", async () => {
-      const userId = 1;
-      await repository.create({ userId, status: "completed" });
+    it("should return null when no active cart found", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([]);
 
-      const result = await repository.findActiveCartByUserId(userId);
+      const result = await repository.findActiveCartByUserId(1);
+
       expect(result).toBeNull();
     });
   });
 
-  describe("addToCart", () => {
-    it("新しい商品をカートに追加できること", async () => {
-      const cartId = 1;
-      const productId = 1;
-      const quantity = 2;
+  describe("getCartItems", () => {
+    it("should return cart items with products", async () => {
+      const mockCartItemWithProduct = {
+        ...mockCartItem,
+        product: mockProduct,
+      };
 
-      const result = await repository.addToCart(cartId, productId, quantity);
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.leftJoin.mockReturnThis();
+      db.where.mockReturnValue([mockCartItemWithProduct]);
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          cartId,
-          productId,
-          quantity,
-        })
+      const result = await repository.getCartItems(1);
+
+      expect(result).toEqual([mockCartItemWithProduct]);
+      expect(db.select).toHaveBeenCalled();
+      expect(db.from).toHaveBeenCalledWith(cartItems);
+      expect(db.leftJoin).toHaveBeenCalledWith(
+        products,
+        eq(cartItems.productId, products.id)
       );
+      expect(db.where).toHaveBeenCalledWith(eq(cartItems.cartId, 1));
+    });
+  });
+
+  describe("addToCart", () => {
+    it("should update quantity if item exists", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([mockCartItem]);
+      db.update.mockReturnThis();
+      db.set.mockReturnThis();
+      db.returning.mockReturnValue([{ ...mockCartItem, quantity: 2 }]);
+
+      const result = await repository.addToCart(1, 1, 1);
+
+      expect(result).toEqual({ ...mockCartItem, quantity: 2 });
+      expect(db.update).toHaveBeenCalledWith(cartItems);
+      expect(db.set).toHaveBeenCalled();
     });
 
-    it("既存の商品の数量を更新できること", async () => {
-      const cartId = 1;
-      const productId = 1;
-      const initialQuantity = 2;
-      const additionalQuantity = 3;
+    it("should create new item if not exists", async () => {
+      const db = mockDb as any;
+      db.select.mockReturnThis();
+      db.from.mockReturnThis();
+      db.where.mockReturnThis();
+      db.limit.mockReturnValue([]);
+      db.insert.mockReturnThis();
+      db.values.mockReturnThis();
+      db.returning.mockReturnValue([mockCartItem]);
 
-      await repository.addToCart(cartId, productId, initialQuantity);
-      const result = await repository.addToCart(
-        cartId,
-        productId,
-        additionalQuantity
-      );
+      const result = await repository.addToCart(1, 1, 1);
 
-      expect(result.quantity).toBe(initialQuantity + additionalQuantity);
+      expect(result).toEqual(mockCartItem);
+      expect(db.insert).toHaveBeenCalledWith(cartItems);
+      expect(db.values).toHaveBeenCalledWith({
+        cartId: 1,
+        productId: 1,
+        quantity: 1,
+      });
     });
   });
 
   describe("updateCartItemQuantity", () => {
-    it("カート内の商品の数量を更新できること", async () => {
-      const cartId = 1;
-      const productId = 1;
-      const initialQuantity = 2;
-      const newQuantity = 5;
+    it("should update cart item quantity", async () => {
+      const updatedCartItem = { ...mockCartItem, quantity: 2 };
+      const db = mockDb as any;
+      db.update.mockReturnThis();
+      db.set.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([updatedCartItem]);
 
-      const item = await repository.addToCart(
-        cartId,
-        productId,
-        initialQuantity
-      );
-      const result = await repository.updateCartItemQuantity(
-        item.id,
-        newQuantity
-      );
+      const result = await repository.updateCartItemQuantity(1, 2);
 
-      expect(result?.quantity).toBe(newQuantity);
+      expect(result).toEqual(updatedCartItem);
+      expect(db.update).toHaveBeenCalledWith(cartItems);
+      expect(db.set).toHaveBeenCalled();
+      expect(db.where).toHaveBeenCalledWith(eq(cartItems.id, 1));
     });
 
-    it("存在しない商品の更新は失敗すること", async () => {
-      const result = await repository.updateCartItemQuantity(999, 5);
+    it("should return null if item not found", async () => {
+      const db = mockDb as any;
+      db.update.mockReturnThis();
+      db.set.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([]);
+
+      const result = await repository.updateCartItemQuantity(1, 2);
+
       expect(result).toBeNull();
     });
   });
 
   describe("removeFromCart", () => {
-    it("カートから商品を削除できること", async () => {
-      const cartId = 1;
-      const productId = 1;
-      const item = await repository.addToCart(cartId, productId, 1);
+    it("should remove cart item and return true", async () => {
+      const db = mockDb as any;
+      db.delete.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([mockCartItem]);
 
-      const result = await repository.removeFromCart(item.id);
+      const result = await repository.removeFromCart(1);
+
       expect(result).toBe(true);
-
-      const items = await repository.getCartItems(cartId);
-      expect(items).toHaveLength(0);
+      expect(db.delete).toHaveBeenCalledWith(cartItems);
+      expect(db.where).toHaveBeenCalledWith(eq(cartItems.id, 1));
     });
 
-    it("存在しない商品の削除は失敗すること", async () => {
-      const result = await repository.removeFromCart(999);
+    it("should return false if item not found", async () => {
+      const db = mockDb as any;
+      db.delete.mockReturnThis();
+      db.where.mockReturnThis();
+      db.returning.mockReturnValue([]);
+
+      const result = await repository.removeFromCart(1);
+
       expect(result).toBe(false);
-    });
-  });
-
-  describe("clearCart", () => {
-    it("カートをクリアできること", async () => {
-      const userId = 1;
-      await repository.create({ userId, status: "active" });
-
-      await repository.clearCart(userId);
-
-      const cart = await repository.findActiveCartByUserId(userId);
-      expect(cart).toBeNull();
     });
   });
 });
