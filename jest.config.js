@@ -15,7 +15,7 @@ module.exports = {
       },
     ],
   },
-  transformIgnorePatterns: ["/node_modules/(?!(@testing-library/jest-dom)/)"],
+  transformIgnorePatterns: ["/node_modules/(?!(jose|@panva/hkdf)/)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   collectCoverage: true,
   collectCoverageFrom: [

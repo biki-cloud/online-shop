@@ -3,18 +3,20 @@ import type {
   CartItem,
   Order,
   OrderItem,
+  Product,
+  User,
 } from "@/lib/infrastructure/db/schema";
 import type { CreateCartInput } from "@/lib/core/domain/cart";
 import type { CreateOrderInput } from "@/lib/core/domain/order";
-
-interface Product {
-  id: number;
-  price: string;
-  currency: string;
-}
+import type { CreateProductInput } from "@/lib/core/domain/product";
+import type { NewUser } from "@/lib/infrastructure/db/schema";
 
 interface CartItemWithProduct extends CartItem {
-  product?: Product;
+  product?: {
+    id: number;
+    price: string;
+    currency: string;
+  } | null;
 }
 
 export class MockCartRepository {
@@ -70,8 +72,8 @@ export class MockCartRepository {
     } as CartItem;
   }
 
-  async removeFromCart(cartItemId: number): Promise<void> {
-    return;
+  async removeFromCart(cartItemId: number): Promise<boolean> {
+    return true;
   }
 
   async getCartItems(cartId: number): Promise<CartItemWithProduct[]> {
@@ -99,6 +101,24 @@ export class MockCartRepository {
 }
 
 export class MockOrderRepository {
+  async findAll(): Promise<Order[]> {
+    const now = new Date();
+    return [
+      {
+        id: 1,
+        createdAt: now,
+        updatedAt: now,
+        userId: 1,
+        status: "pending",
+        totalAmount: "1000",
+        currency: "jpy",
+        stripeSessionId: null,
+        stripePaymentIntentId: null,
+        shippingAddress: null,
+      },
+    ];
+  }
+
   async create(input: CreateOrderInput): Promise<Order> {
     const now = new Date();
     return {
@@ -242,5 +262,69 @@ export class MockPaymentRepository {
 
   async update(id: number, data: any): Promise<any> {
     return { id, ...data };
+  }
+}
+
+export class MockProductRepository {
+  async findAll(): Promise<Product[]> {
+    return [];
+  }
+
+  async findById(id: number): Promise<Product | null> {
+    return null;
+  }
+
+  async create(data: CreateProductInput): Promise<Product> {
+    const now = new Date();
+    return {
+      id: 1,
+      createdAt: now,
+      updatedAt: now,
+      ...data,
+    } as Product;
+  }
+
+  async update(id: number, data: Partial<Product>): Promise<Product | null> {
+    const now = new Date();
+    return {
+      id,
+      createdAt: now,
+      updatedAt: now,
+      ...data,
+    } as Product;
+  }
+
+  async delete(id: number): Promise<void> {
+    return;
+  }
+}
+
+export class MockUserRepository {
+  async findById(id: number): Promise<User | null> {
+    return null;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return null;
+  }
+
+  async create(data: NewUser): Promise<User> {
+    const now = new Date();
+    return {
+      id: 1,
+      createdAt: now,
+      updatedAt: now,
+      ...data,
+    } as User;
+  }
+
+  async update(id: number, data: Partial<User>): Promise<User | null> {
+    const now = new Date();
+    return {
+      id,
+      createdAt: now,
+      updatedAt: now,
+      ...data,
+    } as User;
   }
 }

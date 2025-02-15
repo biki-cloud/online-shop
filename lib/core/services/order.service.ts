@@ -57,7 +57,6 @@ export class OrderService implements IOrderService {
   }
 
   async findByStripeSessionId(sessionId: string): Promise<Order | null> {
-    const orders = await this.orderRepository.findAll();
-    return orders.find((order) => order.stripeSessionId === sessionId) ?? null;
+    return await this.orderRepository.findByStripeSessionId(sessionId);
   }
 }
