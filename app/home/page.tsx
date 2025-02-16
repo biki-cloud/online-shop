@@ -1,5 +1,15 @@
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 export const metadata = {
@@ -9,122 +19,233 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="container mx-auto px-4 py-8 space-y-16">
       {/* Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center">
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-gray-900 to-gray-600 animate-gradient-y">
-          <div className="absolute inset-0 opacity-20 mix-blend-overlay">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern
-                  id="grid"
-                  width="32"
-                  height="32"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 32 0 L 0 0 0 32"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="0.5"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-        </div>
-        <div className="relative z-10 text-center space-y-6 px-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            Online Shop
-          </h1>
-          <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            あなたのライフスタイルを彩る、厳選されたプレミアム商品をお届けします
-          </p>
-          <Button asChild size="lg" className="rounded-full">
-            <Link href="/products">商品を見る</Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-8 h-8 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">品質へのこだわり</h3>
-              <p className="text-gray-600">
-                厳選された高品質な商品のみを取り扱っています
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-8 h-8 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">迅速な配送</h3>
-              <p className="text-gray-600">
-                スピーディーで確実な配送サービスをご提供
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-8 h-8 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">安心のお買い物</h3>
-              <p className="text-gray-600">
-                セキュアな環境で安全にお買い物いただけます
-              </p>
-            </div>
+      <section className="relative h-[600px] overflow-hidden rounded-xl">
+        <Image
+          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070"
+          alt="Fashion Hero"
+          fill
+          className="object-cover transition-transform hover:scale-105 duration-700"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+          <div className="text-center text-white space-y-4">
+            <h1 className="text-5xl font-bold animate-fade-up">
+              Explore Our Latest Collection Of Goggles
+            </h1>
+            <Button
+              variant="outline"
+              size="lg"
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300"
+            >
+              Shop Now
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">お買い物を始めましょう</h2>
-          <Button asChild size="lg" className="rounded-full">
-            <Link href="/products">商品一覧を見る</Link>
-          </Button>
+      {/* Shop Collection */}
+      <section className="space-y-8">
+        <h2 className="text-3xl font-bold text-center">SHOP BY COLLECTION</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              title: "Fashion",
+              image:
+                "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc",
+            },
+            {
+              title: "Summer Specials",
+              image:
+                "https://images.unsplash.com/photo-1469334031218-e382a71b716b",
+            },
+            {
+              title: "New Arrivals",
+              image:
+                "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93",
+            },
+            {
+              title: "Popular Products",
+              image:
+                "https://images.unsplash.com/photo-1445205170230-053b83016050",
+            },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300"
+            >
+              <AspectRatio ratio={1}>
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover transition-transform group-hover:scale-110 duration-500"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <h3 className="text-white text-xl font-semibold">
+                    {item.title}
+                  </h3>
+                </div>
+              </AspectRatio>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Collection */}
+      <section className="space-y-8">
+        <h2 className="text-3xl font-bold text-center">FEATURE COLLECTION</h2>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {[
+              {
+                title: "Winter Fashion Dress",
+                price: "$140.00",
+                image:
+                  "https://images.unsplash.com/photo-1434389677669-e08b4cac3105",
+              },
+              {
+                title: "Summer Style Trends",
+                price: "$120.00",
+                image:
+                  "https://images.unsplash.com/photo-1469334031218-e382a71b716b",
+              },
+              {
+                title: "Casual Collection",
+                price: "$99.00",
+                image:
+                  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e",
+              },
+              {
+                title: "Spring Collection",
+                price: "$160.00",
+                image:
+                  "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93",
+              },
+            ].map((item, index) => (
+              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                <Card className="overflow-hidden group">
+                  <AspectRatio ratio={3 / 4}>
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105 duration-500"
+                    />
+                  </AspectRatio>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.price}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
+
+      {/* Customer Reviews */}
+      <section className="space-y-8 bg-muted/50 py-16 px-4 rounded-xl">
+        <h2 className="text-3xl font-bold text-center">
+          Our Delighted Customer's
+        </h2>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {[
+              {
+                name: "John Smith",
+                role: "Fashion Enthusiast",
+                comment:
+                  "The best online store I've ever used. The quality is amazing!",
+                avatar:
+                  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
+              },
+              {
+                name: "Emma Davis",
+                role: "Style Consultant",
+                comment:
+                  "Excellent service and amazing products. Highly recommended!",
+                avatar:
+                  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
+              },
+              {
+                name: "Michael Brown",
+                role: "Regular Customer",
+                comment:
+                  "Great prices and fantastic selection. Will definitely shop again!",
+                avatar:
+                  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+              },
+            ].map((review, index) => (
+              <CarouselItem
+                key={index}
+                className="md:basis-1/2 lg:basis-1/3 p-4"
+              >
+                <Card className="p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                      <Image
+                        src={review.avatar}
+                        alt={review.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{review.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {review.role}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground">{review.comment}</p>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
+
+      {/* Instagram Section */}
+      <section className="space-y-8">
+        <h2 className="text-3xl font-bold text-center">#FASHION-INSTAGRAM</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[
+            "https://images.unsplash.com/photo-1485968579580-b6d095142e6e",
+            "https://images.unsplash.com/photo-1469334031218-e382a71b716b",
+            "https://images.unsplash.com/photo-1434389677669-e08b4cac3105",
+            "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93",
+            "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc",
+            "https://images.unsplash.com/photo-1445205170230-053b83016050",
+          ].map((image, index) => (
+            <div
+              key={index}
+              className="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300"
+            >
+              <AspectRatio ratio={1}>
+                <Image
+                  src={image}
+                  alt={`Instagram post ${index + 1}`}
+                  fill
+                  className="object-cover transition-transform group-hover:scale-110 duration-500"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                  </svg>
+                </div>
+              </AspectRatio>
+            </div>
+          ))}
         </div>
       </section>
     </div>
