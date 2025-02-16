@@ -11,6 +11,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 
 export const metadata = {
   title: "Online Shop",
@@ -38,8 +39,9 @@ export default function HomePage() {
               variant="outline"
               size="lg"
               className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300"
+              asChild
             >
-              Shop Now
+              <Link href="/products">Shop Now</Link>
             </Button>
           </div>
         </div>
