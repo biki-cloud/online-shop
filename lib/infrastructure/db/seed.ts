@@ -170,12 +170,11 @@ async function seedProducts() {
       deletedAt: null,
     },
     {
-      name: "レザーベルト - ブラウン",
-      description: "イタリアンレザーを使用した、クラシックなデザインのベルト。",
+      name: "ネイビー - ビキニ",
+      description: "クラシックなデザインのビキニ。",
       price: "7500",
       currency: "JPY",
-      imageUrl:
-        "https://images.unsplash.com/photo-1553981834-a23f5b69e3ec?w=800&q=80",
+      imageUrl: "https://images.unsplash.com/photo-1582639590011-f5a8416d1101",
       stock: 70,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
