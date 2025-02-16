@@ -2,8 +2,13 @@
 
 import { signOut } from "@/app/actions/auth";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  className?: string;
+}
+
+export function SignOutButton({ className }: SignOutButtonProps) {
   const handleSignOut = async () => {
     console.log("[SignOutButton] Attempting to sign out");
     try {
@@ -15,8 +20,14 @@ export function SignOutButton() {
   };
 
   return (
-    <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
-      ログアウト
+    <DropdownMenuItem
+      className={cn(
+        "text-destructive focus:text-destructive focus:bg-destructive/10",
+        className
+      )}
+      onClick={handleSignOut}
+    >
+      サインアウト
     </DropdownMenuItem>
   );
 }

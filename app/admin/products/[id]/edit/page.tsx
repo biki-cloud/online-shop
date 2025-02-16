@@ -10,20 +10,32 @@ interface Props {
 }
 
 export default async function AdminProductEditPage({ params }: Props) {
-  const isAdmin = await checkAdmin();
-  if (!isAdmin) {
+  const resolvedParams = await Promise.resolve(params);
+
+  if (!resolvedParams?.id || isNaN(Number(resolvedParams.id))) {
     notFound();
   }
 
-  const product = await getProduct(Number(params.id));
-  if (!product) {
+  const productId = Number(resolvedParams.id);
+
+  try {
+    const [isAdmin, product] = await Promise.all([
+      checkAdmin(),
+      getProduct(productId),
+    ]);
+
+    if (!isAdmin || !product) {
+      notFound();
+    }
+
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-6">商品の編集</h1>
+        <AdminProductForm product={product} />
+      </div>
+    );
+  } catch (error) {
+    console.error("Error loading product:", error);
     notFound();
   }
-
-  return (
-    <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">商品の編集</h1>
-      <AdminProductForm product={product} />
-    </div>
-  );
 }

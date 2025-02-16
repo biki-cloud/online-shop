@@ -22,18 +22,12 @@ export function UserState({ user }: UserStateProps) {
   if (!user) {
     console.log("[UserState] No user found, showing sign-in/sign-up buttons");
     return (
-      <>
-        <Link href="/sign-in">
-          <Button variant="ghost" size="sm">
-            サインイン
-          </Button>
-        </Link>
-        <Link href="/sign-up">
-          <Button variant="default" size="sm">
-            新規登録
-          </Button>
-        </Link>
-      </>
+      <Link href="/auth/signin">
+        <Button variant="ghost" size="icon" className="relative group">
+          <User className="h-5 w-5 transition-transform group-hover:scale-110 group-hover:text-orange-500" />
+          <span className="sr-only">Sign in</span>
+        </Button>
+      </Link>
     );
   }
 
@@ -41,16 +35,22 @@ export function UserState({ user }: UserStateProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          <User className="h-4 w-4" />
-          <span>{user.email}</span>
+        <Button variant="ghost" size="icon" className="relative group">
+          <User className="h-5 w-5 transition-transform group-hover:scale-110 group-hover:text-orange-500" />
+          <span className="sr-only">User menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild>
-          <Link href="/settings">設定</Link>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem className="flex-col items-start gap-1 p-4">
+          <p className="text-sm font-medium leading-none">{user.name}</p>
+          <p className="text-xs text-muted-foreground">{user.email}</p>
         </DropdownMenuItem>
-        <SignOutButton />
+        <DropdownMenuItem asChild>
+          <Link href="/settings" className="w-full">
+            設定
+          </Link>
+        </DropdownMenuItem>
+        <SignOutButton className="w-full" />
       </DropdownMenuContent>
     </DropdownMenu>
   );

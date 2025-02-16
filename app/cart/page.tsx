@@ -6,6 +6,7 @@ import { container } from "@/lib/di/container";
 import type { ICartService } from "@/lib/core/services/interfaces/cart.service";
 import type { CartItem } from "@/lib/core/domain/cart";
 import type { Product } from "@/lib/core/domain/product";
+import { ShoppingCart } from "lucide-react";
 
 export default async function CartPage() {
   const session = await getSession();
@@ -20,9 +21,14 @@ export default async function CartPage() {
 
   if (!cart) {
     return (
-      <div className="container py-8">
-        <h1 className="text-2xl font-bold mb-4">カート</h1>
-        <p>カートは空です</p>
+      <div className="container max-w-7xl mx-auto py-16">
+        <div className="flex items-center space-x-2 mb-8">
+          <ShoppingCart className="h-6 w-6" />
+          <h1 className="text-3xl font-bold">ショッピングカート</h1>
+        </div>
+        <div className="bg-background rounded-lg border p-8 text-center">
+          <p className="text-muted-foreground">カートは空です</p>
+        </div>
       </div>
     );
   }
@@ -32,10 +38,13 @@ export default async function CartPage() {
   })[];
 
   return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-bold mb-4">カート</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+    <div className="container max-w-7xl mx-auto py-16">
+      <div className="flex items-center space-x-2 mb-8">
+        <ShoppingCart className="h-6 w-6" />
+        <h1 className="text-3xl font-bold">ショッピングカート</h1>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
           <CartItems items={cartItems} />
         </div>
         <div>
