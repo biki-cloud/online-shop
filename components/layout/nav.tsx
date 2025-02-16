@@ -10,6 +10,8 @@ import {
   ClipboardList,
   Package,
   Store,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { Suspense } from "react";
 import { UserState } from "./user-state";
@@ -66,7 +68,24 @@ export function Nav() {
             </Button>
           </Link>
           <Suspense fallback={<UserLoadingState />}>
-            <UserState user={user} />
+            {user ? (
+              <UserState user={user} />
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Link href="/sign-in">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LogIn className="h-4 w-4" />
+                    <span className="hidden sm:inline-block">サインイン</span>
+                  </Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    <span className="hidden sm:inline-block">新規登録</span>
+                  </Button>
+                </Link>
+              </div>
+            )}
           </Suspense>
         </nav>
       </div>
