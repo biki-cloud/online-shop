@@ -180,6 +180,290 @@ async function seedProducts() {
       updatedAt: new Date("2024-01-01"),
       deletedAt: null,
     },
+    {
+      name: "リネンブレンドシャツ - ホワイト",
+      description: "通気性の良いリネン混紡素材を使用した、爽やかな長袖シャツ。",
+      price: "8900",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&q=80",
+      stock: 65,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "カーゴパンツ - オリーブ",
+      description:
+        "機能的なポケットデザインのカーゴパンツ。アウトドアやカジュアルスタイルに最適。",
+      price: "11800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?w=800&q=80",
+      stock: 45,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ボーダーマリンTシャツ",
+      description:
+        "マリンテイストのボーダーTシャツ。夏のカジュアルスタイルに欠かせないアイテム。",
+      price: "5900",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=800&q=80",
+      stock: 80,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "プリーツスカート - ブラック",
+      description:
+        "エレガントなプリーツデザインのミディ丈スカート。オフィスからお出かけまで幅広く活躍。",
+      price: "13500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80",
+      stock: 40,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "レザーブーツ - ブラウン",
+      description:
+        "本革使用のクラシカルなデザインブーツ。耐久性と快適さを兼ね備えた一足。",
+      price: "28800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&q=80",
+      stock: 30,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ダウンジャケット - ブラック",
+      description:
+        "軽量で暖かい高機能ダウンジャケット。防水加工済みで雨や雪にも対応。",
+      price: "32800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1544923246-77307dd654cb?w=800&q=80",
+      stock: 35,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ワイドレッグパンツ - グレー",
+      description:
+        "トレンド感のあるワイドシルエットのパンツ。上品な落ち感と履き心地の良さが特徴。",
+      price: "12800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?w=800&q=80",
+      stock: 50,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ニットカーディガン - ベージュ",
+      description:
+        "柔らかな肌触りのニットカーディガン。季節の変わり目に重宝する一枚。",
+      price: "14500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1583846717393-dc2412c95ed7?w=800&q=80",
+      stock: 45,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "シルクブラウス - アイボリー",
+      description:
+        "上質なシルク素材を使用したエレガントなブラウス。オフィスからパーティーまで対応可能。",
+      price: "18800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=800&q=80",
+      stock: 40,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "デニムショートパンツ",
+      description: "カジュアルなデニムショートパンツ。夏のスタイリングに最適。",
+      price: "7800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&q=80",
+      stock: 60,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ストライプシャツドレス",
+      description:
+        "爽やかなストライプ柄のシャツワンピース。オフィスカジュアルにも休日スタイルにも。",
+      price: "16500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80",
+      stock: 35,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "レザーミニスカート - ブラック",
+      description:
+        "スタイリッシュなレザーミニスカート。エッジの効いた大人のカジュアルスタイルに。",
+      price: "19800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1566206091558-7f218b696731?w=800&q=80",
+      stock: 30,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "オーバーサイズパーカー - グレー",
+      description:
+        "トレンド感のあるオーバーサイズシルエットのパーカー。リラックススタイルの定番アイテム。",
+      price: "11800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80",
+      stock: 55,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "クロップドTシャツ - ピンク",
+      description:
+        "トレンディなクロップド丈のTシャツ。ハイウエストボトムとの相性抜群。",
+      price: "5500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80",
+      stock: 70,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ハイウエストジーンズ - インディゴ",
+      description:
+        "美脚効果抜群のハイウエストデニム。ストレッチ素材で快適な履き心地。",
+      price: "13800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80",
+      stock: 45,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "レインコート - クリア",
+      description:
+        "スタイリッシュなデザインの透明レインコート。雨の日のお出かけも楽しくなる一着。",
+      price: "8900",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=800&q=80",
+      stock: 40,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "バンドカラーシャツ - サックスブルー",
+      description:
+        "スタンドカラーがスタイリッシュなシャツ。モダンなビジネススタイルに最適。",
+      price: "10800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80",
+      stock: 50,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "ベロアワンピース - バーガンディ",
+      description:
+        "上品な光沢感のあるベロア素材のワンピース。パーティーシーンにぴったり。",
+      price: "21800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80",
+      stock: 30,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "チェスターコート - キャメル",
+      description:
+        "クラシカルなデザインのチェスターコート。オンオフ問わず活躍する定番アウター。",
+      price: "35800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1544923246-77307dd654cb?w=800&q=80",
+      stock: 25,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "アスレチックレギンス - ブラック",
+      description:
+        "吸汗速乾機能付きのスポーツレギンス。ヨガやジムでの活動に最適。",
+      price: "7800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=800&q=80",
+      stock: 65,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "フリルブラウス - ホワイト",
+      description:
+        "フェミニンなフリルディテールのブラウス。デイリーからオフィスまで幅広く活用可能。",
+      price: "12500",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=800&q=80",
+      stock: 40,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
+    {
+      name: "バイカーレザージャケット",
+      description:
+        "本革使用のクラシカルなバイカージャケット。エッジの効いたスタイリングの主役に。",
+      price: "45800",
+      currency: "JPY",
+      imageUrl:
+        "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80",
+      stock: 20,
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+      deletedAt: null,
+    },
   ];
 
   for (const product of testProducts) {
