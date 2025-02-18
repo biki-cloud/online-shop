@@ -39,6 +39,27 @@ export const products = pgTable("products", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const productCategories = pgTable("product_categories", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id),
+  categoryId: integer("category_id")
+    .notNull()
+    .references(() => categories.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const carts = pgTable("carts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
@@ -130,6 +151,28 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
+export const productsRelations = relations(products, ({ many }) => ({
+  categories: many(productCategories),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(productCategories),
+}));
+
+export const productCategoriesRelations = relations(
+  productCategories,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [productCategories.productId],
+      references: [products.id],
+    }),
+    category: one(categories, {
+      fields: [productCategories.categoryId],
+      references: [categories.id],
+    }),
+  })
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Product = typeof products.$inferSelect;
@@ -144,3 +187,7 @@ export type NewOrder = Omit<typeof orders.$inferInsert, "status"> & {
 };
 export type OrderItem = typeof orderItems.$inferSelect;
 export type NewOrderItem = typeof orderItems.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
+export type ProductCategory = typeof productCategories.$inferSelect;
+export type NewProductCategory = typeof productCategories.$inferInsert;
