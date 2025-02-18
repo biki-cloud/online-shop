@@ -21,10 +21,16 @@ jest.mock("@/lib/infrastructure/auth/session", () => ({
 
 jest.mock("@/lib/infrastructure/payments/stripe");
 
-jest.mock("bcryptjs", () => ({
-  compare: jest.fn().mockResolvedValue(true),
-  hash: jest.fn().mockResolvedValue("hashedPassword"),
+jest.mock("next/cache", () => ({
+  revalidatePath: jest.fn(),
 }));
+
+jest.mock("bcryptjs", () => {
+  return {
+    compare: jest.fn().mockImplementation(async () => true),
+    hash: jest.fn().mockImplementation(async () => "hashedPassword"),
+  };
+});
 
 describe("User Actions", () => {
   let mockUserRepository: MockUserRepository;
@@ -37,6 +43,12 @@ describe("User Actions", () => {
     createdAt: new Date("2025-02-15T21:41:37.040Z"),
     updatedAt: new Date("2025-02-15T21:41:37.040Z"),
     deletedAt: null,
+    postalCode: null,
+    prefecture: null,
+    city: null,
+    address1: null,
+    address2: null,
+    phoneNumber: null,
   };
 
   beforeEach(() => {
@@ -169,21 +181,27 @@ describe("User Actions", () => {
 
   describe("deleteUser", () => {
     it("should delete user successfully", async () => {
-      jest.spyOn(mockUserRepository, "delete").mockResolvedValue(true);
+      const mockDelete = jest
+        .fn<Promise<boolean>, [number]>()
+        .mockReturnValue(Promise.resolve(true));
+      mockUserRepository.delete = mockDelete;
 
       const result = await deleteUser(1);
 
       expect(result).toBe(true);
-      expect(mockUserRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockDelete).toHaveBeenCalledWith(1);
     });
 
     it("should return false when user deletion fails", async () => {
-      jest.spyOn(mockUserRepository, "delete").mockResolvedValue(false);
+      const mockDelete = jest
+        .fn<Promise<boolean>, [number]>()
+        .mockReturnValue(Promise.resolve(false));
+      mockUserRepository.delete = mockDelete;
 
       const result = await deleteUser(1);
 
       expect(result).toBe(false);
-      expect(mockUserRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockDelete).toHaveBeenCalledWith(1);
     });
   });
 
@@ -198,10 +216,16 @@ describe("User Actions", () => {
         createdAt: new Date("2025-02-15T21:41:37.040Z"),
         updatedAt: new Date("2025-02-15T21:41:37.040Z"),
         deletedAt: null,
+        postalCode: null,
+        prefecture: null,
+        city: null,
+        address1: null,
+        address2: null,
+        phoneNumber: null,
       };
 
       jest.spyOn(mockUserRepository, "findByEmail").mockResolvedValue(mockUser);
-      jest.spyOn(bcryptjs, "compare").mockResolvedValue(true);
+      jest.spyOn(bcryptjs, "compare").mockImplementation(async () => true);
 
       const result = await validateUserPassword(
         "test@example.com",
@@ -242,10 +266,16 @@ describe("User Actions", () => {
         createdAt: new Date("2025-02-15T21:41:37.040Z"),
         updatedAt: new Date("2025-02-15T21:41:37.040Z"),
         deletedAt: null,
+        postalCode: null,
+        prefecture: null,
+        city: null,
+        address1: null,
+        address2: null,
+        phoneNumber: null,
       };
 
       jest.spyOn(mockUserRepository, "findByEmail").mockResolvedValue(mockUser);
-      jest.spyOn(bcryptjs, "compare").mockResolvedValue(false);
+      jest.spyOn(bcryptjs, "compare").mockImplementation(async () => false);
 
       const result = await validateUserPassword(
         "test@example.com",
